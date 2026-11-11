@@ -29,15 +29,16 @@
       display: block;
       width: 100%;
       height: 100%;
-      cursor: crosshair;
     }
 
-    .hud, .status, .quick-nav {
+    .hud, .status {
       position: absolute;
-      background: rgba(15, 36, 27, .84);
       border: 1px solid rgba(220, 239, 209, .4);
+      border-radius: 14px;
+      background: rgba(15, 36, 27, .84);
       box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
       backdrop-filter: blur(8px);
+      pointer-events: none;
     }
 
     .hud {
@@ -45,8 +46,6 @@
       left: 16px;
       max-width: calc(100% - 32px);
       padding: 12px 16px;
-      border-radius: 14px;
-      pointer-events: none;
     }
 
     .hud h1 {
@@ -67,53 +66,13 @@
       right: 16px;
       max-width: 290px;
       padding: 10px 14px;
-      border-radius: 12px;
       font-size: .82rem;
-      pointer-events: none;
-    }
-
-    .quick-nav {
-      left: 50%;
-      bottom: max(16px, env(safe-area-inset-bottom));
-      display: flex;
-      gap: 8px;
-      max-width: calc(100% - 24px);
-      padding: 9px;
-      border-radius: 16px;
-      transform: translateX(-50%);
-      overflow-x: auto;
-    }
-
-    .nav-btn, .control-btn {
-      border: 1px solid rgba(220, 239, 209, .45);
-      background: #294a38;
-      color: #fff;
-      font: inherit;
-      font-weight: 650;
-      cursor: pointer;
-      user-select: none;
-      touch-action: none;
-    }
-
-    .nav-btn {
-      flex: 0 0 auto;
-      padding: 9px 13px;
-      border-radius: 999px;
-      font-size: .82rem;
-      touch-action: manipulation;
-    }
-
-    .nav-btn:hover, .nav-btn:focus-visible,
-    .control-btn:hover, .control-btn:focus-visible {
-      background: #54784d;
-      outline: 2px solid #d3e9b9;
-      outline-offset: 2px;
     }
 
     .controls {
       position: absolute;
       right: 16px;
-      bottom: 88px;
+      bottom: 18px;
       display: none;
       width: 144px;
       height: 144px;
@@ -126,66 +85,60 @@
       place-items: center;
       width: 44px;
       height: 44px;
+      padding: 0;
+      border: 1px solid rgba(230, 242, 217, .7);
       border-radius: 12px;
-      background: rgba(37, 72, 52, .88);
+      background: rgba(37, 72, 52, .9);
+      color: white;
+      font: inherit;
       font-size: 1.1rem;
+      user-select: none;
+      touch-action: none;
     }
 
-    .control-btn.active { background: #54784d; }
-
+    .control-btn.active { background: #668451; }
     .control-btn[data-dir="up"] { top: 0; left: 50px; }
     .control-btn[data-dir="down"] { bottom: 0; left: 50px; }
     .control-btn[data-dir="left"] { top: 50px; left: 0; }
     .control-btn[data-dir="right"] { top: 50px; right: 0; }
+
     .control-btn[data-dir="jump"] {
       top: 50px;
       left: 50px;
       border-radius: 50%;
-      background: rgba(117, 91, 56, .9);
+      background: rgba(117, 91, 56, .94);
     }
 
     @media (max-width: 650px) {
       .controls { display: block; }
       .hud { top: 10px; left: 10px; padding: 10px 12px; }
       .hud h1 { font-size: .88rem; }
-      .hud p { font-size: .72rem; }
+      .hud p { max-width: 245px; font-size: .72rem; }
       .status {
-        top: 82px;
+        top: 88px;
         right: 10px;
         max-width: 55%;
         padding: 8px 10px;
         font-size: .72rem;
       }
-      .nav-btn { padding: 8px 11px; font-size: .75rem; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * { scroll-behavior: auto !important; }
     }
   </style>
 </head>
 <body>
   <main id="scene">
-    <canvas id="world" aria-label="Bird sanctuary. Walk, jump, and touch a destination emblem to visit it."></canvas>
+    <canvas id="world" aria-label="Bird sanctuary. Walk into a destination emblem to visit it."></canvas>
 
     <header class="hud">
       <h1>BillyWagnur Sanctuary</h1>
-      <p>WASD / arrows to move • Space / Up to jump • Touch an emblem to visit</p>
+      <p>WASD / arrows to move • Space to jump • Touch an emblem to visit</p>
     </header>
 
     <div class="status" id="status" aria-live="polite">
-      A quiet morning in the sanctuary
+      Explore the sanctuary and find a destination
     </div>
 
-    <nav class="quick-nav" aria-label="Destinations">
-      <button class="nav-btn" data-station="youtube">YouTube</button>
-      <button class="nav-btn" data-station="spotify">Spotify</button>
-      <button class="nav-btn" data-station="applemusic">Apple Music</button>
-      <button class="nav-btn" data-station="tiktok">TikTok</button>
-    </nav>
-
-    <div class="controls" aria-label="Movement controls">
-      <button class="control-btn" data-dir="up" aria-label="Jump">▲</button>
+    <div class="controls" aria-label="Touch controls">
+      <button class="control-btn" data-dir="up" aria-label="Move up">▲</button>
       <button class="control-btn" data-dir="left" aria-label="Move left">◀</button>
       <button class="control-btn" data-dir="jump" aria-label="Jump">●</button>
       <button class="control-btn" data-dir="right" aria-label="Move right">▶</button>
@@ -205,7 +158,7 @@
       tiktok: "https://www.tiktok.com/@baggettball"
     };
 
-    // Keep these media files in the same repository folder as index.html.
+    // Keep these media files in the same folder as index.html.
     const avatar = new Image();
     avatar.src = "./avatar.png";
 
@@ -217,40 +170,57 @@
     backgroundMusic.volume = 0.35;
     backgroundMusic.preload = "auto";
 
-    function startBackgroundMusic() {
+    function startMusic() {
       backgroundMusic.play().catch(() => {
-        // The browser may wait for the visitor's first interaction.
+        // Browsers may require the visitor to interact before playing audio.
       });
     }
 
-    startBackgroundMusic();
-    window.addEventListener("pointerdown", startBackgroundMusic, { once: true });
-    window.addEventListener("keydown", startBackgroundMusic, { once: true });
+    startMusic();
+    window.addEventListener("pointerdown", startMusic, { once: true });
+    window.addEventListener("keydown", startMusic, { once: true });
 
     const stations = [
-      { id: "youtube", label: "YouTube", icon: "▶", color: "#e76b58", x: .20, y: .62 },
-      { id: "spotify", label: "Spotify", icon: "♫", color: "#9fc27e", x: .40, y: .57 },
-      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#e99b9c", x: .60, y: .57 },
-      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bc5c0", x: .80, y: .62 }
+      { id: "youtube", label: "YouTube", icon: "▶", color: "#f07862", x: .16, y: .68 },
+      { id: "spotify", label: "Spotify", icon: "♫", color: "#a9cf83", x: .39, y: .60 },
+      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#efa0a6", x: .61, y: .60 },
+      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bd5ce", x: .84, y: .68 }
     ];
 
-    // Raised surfaces the player can jump onto and stand on.
-    // Positions and sizes are proportional to the screen.
-    const platforms = [
-      { type: "hill",  x: .04, y: .69, w: .22, h: .15 },
-      { type: "rock",  x: .31, y: .75, w: .105, h: .075 },
-      { type: "stump", x: .45, y: .68, w: .095, h: .14 },
-      { type: "log",   x: .62, y: .75, w: .18, h: .065 },
-      { type: "hill",  x: .78, y: .68, w: .20, h: .16 },
-      { type: "rock",  x: .48, y: .54, w: .075, h: .06 }
+    // Collision boxes for foreground objects. Jump over these or walk around them.
+    const obstacles = [
+      { type: "rock",  x: .28, y: .79, w: .075, h: .055, blockW: .075, blockH: .05, height: 25 },
+      { type: "stump", x: .48, y: .73, w: .07, h: .12, blockW: .07, blockH: .08, height: 44 },
+      { type: "log",   x: .69, y: .79, w: .15, h: .055, blockW: .15, blockH: .045, height: 24 },
+      { type: "rock",  x: .91, y: .73, w: .07, h: .06, blockW: .07, blockH: .05, height: 28 },
+      { type: "rock",  x: .08, y: .76, w: .07, h: .055, blockW: .07, blockH: .05, height: 23 }
     ];
+
+    const trees = [
+      { x: .02, y: .69, scale: 1.15 },
+      { x: .10, y: .57, scale: .80 },
+      { x: .31, y: .54, scale: .64 },
+      { x: .70, y: .53, scale: .63 },
+      { x: .91, y: .57, scale: .82 },
+      { x: .99, y: .68, scale: 1.18 }
+    ];
+
+    const birds = Array.from({ length: 10 }, (_, i) => ({
+      x: Math.random(),
+      y: .12 + Math.random() * .25,
+      speed: .014 + Math.random() * .025,
+      phase: Math.random() * Math.PI * 2,
+      size: 3 + Math.random() * 3,
+      direction: i % 2 ? 1 : -1
+    }));
 
     const player = {
       x: 0,
-      y: 0,       // feet position
-      vy: 0,
+      y: 0,
+      jumpZ: 0,
+      jumpVelocity: 0,
       facing: 1,
-      grounded: false
+      grounded: true
     };
 
     const keys = new Set();
@@ -258,31 +228,11 @@
     let width = 0;
     let height = 0;
     let pixelRatio = 1;
-    let targetStation = null;
     let previousTime = 0;
-    let navigationTimer = null;
     let activated = false;
 
-    const birds = Array.from({ length: 10 }, (_, i) => ({
-      x: Math.random(),
-      y: .12 + Math.random() * .24,
-      speed: .014 + Math.random() * .025,
-      phase: Math.random() * Math.PI * 2,
-      size: 3 + Math.random() * 3,
-      direction: i % 2 ? 1 : -1
-    }));
-
     function groundY() {
-      return height * .84;
-    }
-
-    function platformRect(platform) {
-      return {
-        x: width * platform.x,
-        y: height * platform.y,
-        w: width * platform.w,
-        h: height * platform.h
-      };
+      return height * .88;
     }
 
     function avatarHeight() {
@@ -305,7 +255,7 @@
         player.y = groundY();
         player.grounded = true;
       } else {
-        player.x = Math.max(12, Math.min(width - 12, player.x));
+        player.x = Math.min(width - 18, player.x);
         player.y = Math.min(groundY(), player.y);
       }
     }
@@ -313,60 +263,575 @@
     window.addEventListener("resize", resize);
     resize();
 
-    function stationPoint(station) {
-      return { x: width * station.x, y: height * station.y };
-    }
-
-    function playDecisionSound() {
+    function playAye() {
       decisionSound.currentTime = 0;
       decisionSound.play().catch(error => {
         console.warn("Could not play aye.mp3:", error);
       });
     }
 
-    function activateStation(station) {
-      if (!station || activated) return;
-      activated = true;
-      targetStation = null;
-      keys.clear();
-      statusEl.textContent = `Opening ${station.label}…`;
-      playDecisionSound();
-
-      navigationTimer = setTimeout(() => {
-        window.location.href = destinations[station.id];
-      }, 500);
-    }
-
-    function walkTo(station) {
-      if (!station || activated) return;
-
-      targetStation = station;
-      keys.clear();
-      statusEl.textContent = `Walking to ${station.label}…`;
-      playDecisionSound();
-    }
-
-    document.querySelectorAll(".nav-btn").forEach(button => {
-      button.addEventListener("click", () => {
-        const station = stations.find(item => item.id === button.dataset.station);
-        walkTo(station);
-      });
-    });
-
     function jump() {
-      if (player.grounded && !targetStation && !activated) {
-        player.vy = -Math.max(390, height * .72);
-        player.grounded = false;
+      if (activated || !player.grounded) return;
+      player.jumpVelocity = Math.max(430, height * .78);
+      player.grounded = false;
+    }
+
+    function getObstacleRect(obstacle) {
+      return {
+        x: width * obstacle.x,
+        y: height * obstacle.y,
+        w: width * obstacle.blockW,
+        h: height * obstacle.blockH
+      };
+    }
+
+    function hitsObstacle(x, y) {
+      const playerRadius = Math.max(9, avatarHeight() * .10);
+
+      for (const obstacle of obstacles) {
+        // A jump high enough to clear an object bypasses its ground collision.
+        if (player.jumpZ > obstacle.height) continue;
+
+        const r = getObstacleRect(obstacle);
+        const nearestX = Math.max(r.x - r.w / 2, Math.min(x, r.x + r.w / 2));
+        const nearestY = Math.max(r.y - r.h / 2, Math.min(y, r.y + r.h / 2));
+        const dx = x - nearestX;
+        const dy = y - nearestY;
+
+        if (dx * dx + dy * dy < playerRadius * playerRadius) return true;
       }
+
+      // Tree trunks are obstacles too.
+      for (const tree of trees) {
+        if (tree.y < .60 || tree.x < .13 || tree.x > .87) continue;
+
+        const tx = width * tree.x;
+        const ty = height * tree.y;
+        const radius = 12 * tree.scale;
+
+        if (Math.hypot(x - tx, y - ty) < radius + playerRadius) return true;
+      }
+
+      return false;
+    }
+
+    function movePlayer(dx, dy) {
+      // Resolve each axis separately so the character can slide around obstacles.
+      const nextX = Math.max(14, Math.min(width - 14, player.x + dx));
+      if (!hitsObstacle(nextX, player.y)) player.x = nextX;
+
+      const minY = height * .48;
+      const maxY = groundY();
+      const nextY = Math.max(minY, Math.min(maxY, player.y + dy));
+      if (!hitsObstacle(player.x, nextY)) player.y = nextY;
+    }
+
+    function checkEmblemTouch() {
+      if (activated) return;
+
+      const spriteH = avatarHeight();
+      const spriteW = avatar.naturalWidth
+        ? spriteH * avatar.naturalWidth / avatar.naturalHeight
+        : spriteH * .7;
+
+      const avatarCenterY = player.y - player.jumpZ - spriteH * .52;
+
+      for (const station of stations) {
+        const x = width * station.x;
+        const bubbleY = height * station.y - 43;
+        const rx = 24 + spriteW * .31;
+        const ry = 24 + spriteH * .34;
+
+        const withinX = Math.abs(player.x - x) < rx;
+        const withinY = Math.abs(avatarCenterY - bubbleY) < ry;
+
+        if (withinX && withinY) {
+          activated = true;
+          statusEl.textContent = `Opening ${station.label}…`;
+          playAye();
+
+          // Brief pause lets the contact sound begin before navigation.
+          setTimeout(() => {
+            window.location.href = destinations[station.id];
+          }, 350);
+
+          return;
+        }
+      }
+    }
+
+    function drawBackground() {
+      // Sky and distant atmospheric light.
+      const sky = ctx.createLinearGradient(0, 0, 0, height);
+      sky.addColorStop(0, "#8daea5");
+      sky.addColorStop(.28, "#b8c5a5");
+      sky.addColorStop(.49, "#82946b");
+      sky.addColorStop(1, "#1c3424");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, width, height);
+
+      const sun = ctx.createRadialGradient(
+        width * .53, height * .19, 2,
+        width * .53, height * .19, height * .62
+      );
+      sun.addColorStop(0, "rgba(255, 234, 176, .48)");
+      sun.addColorStop(.35, "rgba(244, 224, 169, .15)");
+      sun.addColorStop(1, "rgba(244, 224, 169, 0)");
+      ctx.fillStyle = sun;
+      ctx.fillRect(0, 0, width, height);
+
+      // Layered distant hills create depth.
+      ctx.fillStyle = "#81916c";
+      ctx.beginPath();
+      ctx.moveTo(0, height * .43);
+      ctx.quadraticCurveTo(width * .18, height * .29, width * .39, height * .42);
+      ctx.quadraticCurveTo(width * .69, height * .24, width, height * .40);
+      ctx.lineTo(width, height * .62);
+      ctx.lineTo(0, height * .62);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#5b7655";
+      ctx.beginPath();
+      ctx.moveTo(0, height * .49);
+      ctx.quadraticCurveTo(width * .20, height * .38, width * .43, height * .49);
+      ctx.quadraticCurveTo(width * .74, height * .34, width, height * .47);
+      ctx.lineTo(width, height * .68);
+      ctx.lineTo(0, height * .68);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pond with bank and subtle reflections.
+      ctx.fillStyle = "#354f3c";
+      ctx.beginPath();
+      ctx.ellipse(width * .12, height * .62, width * .23, height * .105, -.06, 0, Math.PI * 2);
+      ctx.fill();
+
+      const water = ctx.createLinearGradient(0, height * .54, 0, height * .68);
+      water.addColorStop(0, "#83a99b");
+      water.addColorStop(.55, "#527d77");
+      water.addColorStop(1, "#315953");
+      ctx.fillStyle = water;
+      ctx.beginPath();
+      ctx.ellipse(width * .12, height * .61, width * .205, height * .077, -.06, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(233, 241, 212, .4)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 8; i++) {
+        const x = width * (.02 + i * .027);
+        const y = height * (.58 + (i % 3) * .022);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x + 10, y - 2, x + 22, y);
+        ctx.stroke();
+      }
+
+      // Forest floor with a bright center and dark foreground.
+      const ground = ctx.createLinearGradient(0, height * .46, 0, height);
+      ground.addColorStop(0, "#59744a");
+      ground.addColorStop(.36, "#3b5936");
+      ground.addColorStop(1, "#172c20");
+      ctx.fillStyle = ground;
+      ctx.fillRect(0, height * .46, width, height * .54);
+
+      // Perspective trail narrows toward the horizon.
+      ctx.fillStyle = "#a49a7a";
+      ctx.beginPath();
+      ctx.moveTo(width * .475, height * .45);
+      ctx.lineTo(width * .525, height * .45);
+      ctx.lineTo(width * .89, height);
+      ctx.lineTo(width * .11, height);
+      ctx.closePath();
+      ctx.fill();
+
+      const pathLight = ctx.createLinearGradient(0, height * .46, 0, height);
+      pathLight.addColorStop(0, "rgba(240, 224, 183, .28)");
+      pathLight.addColorStop(1, "rgba(71, 66, 49, .24)");
+      ctx.fillStyle = pathLight;
+      ctx.fill();
+
+      // Perspective stones become larger toward the viewer.
+      for (let i = 1; i < 22; i++) {
+        const t = i / 23;
+        const y = height * (.47 + t * .50);
+        const x = width * (.5 + Math.sin(i * 4.7) * t * .19);
+        const size = Math.max(2, width * (.003 + t * .010));
+
+        ctx.fillStyle = i % 2
+          ? "rgba(60, 67, 52, .45)"
+          : "rgba(226, 213, 176, .40)";
+        ctx.beginPath();
+        ctx.ellipse(x, y, size, size * .34, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawTree(tree) {
+      const x = width * tree.x;
+      const ground = height * tree.y;
+      const scale = tree.scale;
+      const trunkW = 18 * scale;
+      const trunkH = height * .29 * scale;
+      const top = ground - trunkH;
+
+      const trunk = ctx.createLinearGradient(x - trunkW, 0, x + trunkW, 0);
+      trunk.addColorStop(0, "#302d22");
+      trunk.addColorStop(.45, "#756044");
+      trunk.addColorStop(1, "#302c22");
+
+      ctx.fillStyle = trunk;
+      ctx.beginPath();
+      ctx.moveTo(x - trunkW * .5, ground);
+      ctx.lineTo(x - trunkW * .28, top);
+      ctx.lineTo(x + trunkW * .22, top);
+      ctx.lineTo(x + trunkW * .65, ground);
+      ctx.closePath();
+      ctx.fill();
+
+      const leaves = ["#263f2e", "#34553a", "#456643", "#526d46"];
+      for (let i = 0; i < 6; i++) {
+        const clusterX = x + (i - 2.5) * 24 * scale;
+        const clusterY = top - 28 * scale + Math.sin(i * 2.4) * 12 * scale;
+
+        ctx.fillStyle = leaves[i % leaves.length];
+        ctx.beginPath();
+        ctx.ellipse(
+          clusterX, clusterY,
+          38 * scale, 47 * scale,
+          0, 0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+
+      // Warm light on one side of the canopy.
+      ctx.fillStyle = "rgba(173, 184, 112, .22)";
+      ctx.beginPath();
+      ctx.ellipse(x - 25 * scale, top - 54 * scale, 20 * scale, 9 * scale, -.55, 0, Math.PI * 2);
+      ctx.ellipse(x + 10 * scale, top - 35 * scale, 16 * scale, 7 * scale, .45, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawBirds(time) {
+      birds.forEach(bird => {
+        const x = (((bird.x + time * bird.speed * bird.direction) % 1) + 1) % 1 * width;
+        const y = height * bird.y + Math.sin(time * 2 + bird.phase) * 5;
+        const flap = Math.sin(time * 8 + bird.phase) * bird.size;
+
+        ctx.strokeStyle = "rgba(34, 47, 37, .82)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x - bird.size, y);
+        ctx.quadraticCurveTo(x, y - flap, x + bird.size, y);
+        ctx.stroke();
+      });
+    }
+
+    function drawHill(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2, y + h);
+      ctx.quadraticCurveTo(x - w * .38, y + h * .14, x, y);
+      ctx.quadraticCurveTo(x + w * .32, y - h * .08, x + w / 2, y + h);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(171, 190, 119, .34)";
+      ctx.lineWidth = Math.max(2, h * .07);
+      ctx.beginPath();
+      ctx.moveTo(x - w * .28, y + h * .55);
+      ctx.quadraticCurveTo(x, y + h * .08, x + w * .28, y + h * .28);
+      ctx.stroke();
+    }
+
+    function drawObstacle(obstacle) {
+      const x = width * obstacle.x;
+      const y = height * obstacle.y;
+      const w = width * obstacle.w;
+      const h = height * obstacle.h;
+
+      // Ground shadow.
+      ctx.fillStyle = "rgba(12, 21, 13, .32)";
+      ctx.beginPath();
+      ctx.ellipse(x, y + h * .45, w * .62, h * .28, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (obstacle.type === "rock") {
+        const rock = ctx.createLinearGradient(x - w / 2, y, x + w / 2, y + h);
+        rock.addColorStop(0, "#9a9d85");
+        rock.addColorStop(.4, "#697362");
+        rock.addColorStop(1, "#424f40");
+        ctx.fillStyle = rock;
+        ctx.beginPath();
+        ctx.moveTo(x - w * .5, y + h * .38);
+        ctx.lineTo(x - w * .34, y + h * .05);
+        ctx.lineTo(x + w * .04, y);
+        ctx.lineTo(x + w * .36, y + h * .12);
+        ctx.lineTo(x + w * .5, y + h * .52);
+        ctx.lineTo(x + w * .34, y + h);
+        ctx.lineTo(x - w * .42, y + h);
+        ctx.closePath();
+        ctx.fill();
+      } else if (obstacle.type === "stump") {
+        ctx.fillStyle = "#674a31";
+        ctx.fillRect(x - w * .38, y + h * .18, w * .76, h * .82);
+
+        const top = ctx.createLinearGradient(x, y, x, y + h * .35);
+        top.addColorStop(0, "#b58b58");
+        top.addColorStop(1, "#795938");
+        ctx.fillStyle = top;
+        ctx.beginPath();
+        ctx.ellipse(x, y + h * .2, w * .5, h * .19, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(72, 48, 30, .65)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(x, y + h * .2, w * .26, h * .09, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (obstacle.type === "log") {
+        ctx.fillStyle = "#684a31";
+        ctx.beginPath();
+        ctx.roundRect(x - w / 2, y + h * .18, w, h * .68, h * .32);
+        ctx.fill();
+
+        ctx.fillStyle = "#ad8352";
+        ctx.beginPath();
+        ctx.ellipse(x - w * .45, y + h * .52, h * .24, h * .34, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#60452d";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(x - w * .45, y + h * .52, h * .14, h * .21, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    function drawStation(station) {
+      const x = width * station.x;
+      const ground = height * station.y;
+      const scale = Math.max(.72, Math.min(1, height / 720));
+      const radius = 24 * scale;
+      const bubbleY = ground - 43 * scale;
+
+      // Ground shadow and wooden signpost.
+      ctx.fillStyle = "rgba(12, 22, 14, .3)";
+      ctx.beginPath();
+      ctx.ellipse(x, ground + 2, 20 * scale, 6 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#604a32";
+      ctx.lineWidth = 5 * scale;
+      ctx.beginPath();
+      ctx.moveTo(x, bubbleY + radius * .7);
+      ctx.lineTo(x, ground);
+      ctx.stroke();
+
+      // Glowing emblem.
+      ctx.shadowColor = station.color;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = "#233b2b";
+      ctx.strokeStyle = station.color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x, bubbleY, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = station.color;
+      ctx.font = `bold ${20 * scale}px system-ui`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(station.icon, x, bubbleY);
+
+      ctx.font = `600 ${Math.max(10, 11 * scale)}px system-ui`;
+      const labelW = Math.max(64 * scale, ctx.measureText(station.label).width + 18);
+
+      ctx.fillStyle = "rgba(20, 37, 26, .9)";
+      ctx.beginPath();
+      ctx.roundRect(x - labelW / 2, bubbleY + radius + 5, labelW, 20 * scale, 7);
+      ctx.fill();
+
+      ctx.fillStyle = "#f3f1df";
+      ctx.fillText(station.label, x, bubbleY + radius + 15 * scale);
+    }
+
+    function drawCharacter(time) {
+      const spriteH = avatarHeight();
+      const spriteW = avatar.naturalWidth
+        ? spriteH * avatar.naturalWidth / avatar.naturalHeight
+        : spriteH * .7;
+
+      const bob = player.grounded && (keys.has("left") || keys.has("right") || keys.has("up") || keys.has("down"))
+        ? Math.abs(Math.sin(time * 11)) * 2
+        : 0;
+
+      ctx.save();
+      ctx.translate(player.x, player.y - player.jumpZ + bob);
+      ctx.scale(player.facing, 1);
+
+      // Shadow stays on the ground while the avatar jumps.
+      ctx.restore();
+
+      ctx.fillStyle = `rgba(10, 20, 13, ${Math.max(.12, .36 - player.jumpZ / 700)})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        player.x,
+        player.y + 2,
+        Math.max(12, spriteW * .24) * (1 + player.jumpZ / 250),
+        Math.max(4, spriteH * .045),
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      if (!avatar.complete || !avatar.naturalWidth) {
+        ctx.fillStyle = "#20222b";
+        ctx.beginPath();
+        ctx.ellipse(player.x, player.y - player.jumpZ - 30, 18, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(player.x, player.y - player.jumpZ + bob);
+      ctx.scale(player.facing, 1);
+      ctx.drawImage(avatar, -spriteW / 2, -spriteH, spriteW, spriteH);
+      ctx.restore();
+    }
+
+    function drawForeground() {
+      // Dark foliage frames the scene and adds a foreground depth layer.
+      ctx.fillStyle = "rgba(10, 27, 16, .78)";
+
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      ctx.lineTo(0, height * .79);
+      ctx.quadraticCurveTo(width * .08, height * .81, width * .17, height);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(width, height);
+      ctx.lineTo(width, height * .77);
+      ctx.quadraticCurveTo(width * .91, height * .82, width * .82, height);
+      ctx.closePath();
+      ctx.fill();
+
+      // Vignette.
+      const shade = ctx.createRadialGradient(
+        width * .5, height * .48, height * .16,
+        width * .5, height * .48, Math.max(width, height) * .76
+      );
+      shade.addColorStop(0, "rgba(0,0,0,0)");
+      shade.addColorStop(1, "rgba(5,15,9,.38)");
+      ctx.fillStyle = shade;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function update(delta) {
+      if (activated) return;
+
+      let dx = 0;
+      let dy = 0;
+
+      if (keys.has("left")) dx -= 1;
+      if (keys.has("right")) dx += 1;
+      if (keys.has("up")) dy -= 1;
+      if (keys.has("down")) dy += 1;
+
+      if (dx || dy) {
+        const length = Math.hypot(dx, dy);
+        const speed = 190 * delta;
+        movePlayer(dx / length * speed, dy / length * speed);
+
+        if (dx) player.facing = dx < 0 ? -1 : 1;
+      }
+
+      if (!player.grounded) {
+        player.jumpVelocity -= Math.max(1000, height * 1.8) * delta;
+        player.jumpZ += player.jumpVelocity * delta;
+
+        if (player.jumpZ <= 0) {
+          player.jumpZ = 0;
+          player.jumpVelocity = 0;
+          player.grounded = true;
+        }
+      }
+
+      checkEmblemTouch();
+    }
+
+    function drawWorld(time) {
+      drawBackground();
+      drawBirds(time);
+
+      // Distant hills sit behind the nearer forest.
+      drawHill(width * .19, height * .48, width * .30, height * .13, "#496444");
+      drawHill(width * .83, height * .47, width * .34, height * .16, "#3e5b3b");
+
+      // Draw trees, stations, and obstacles in depth order relative to the avatar.
+      const objects = [];
+
+      trees.forEach(tree => {
+        objects.push({
+          y: height * tree.y,
+          draw: () => drawTree(tree)
+        });
+      });
+
+      stations.forEach(station => {
+        objects.push({
+          y: height * station.y,
+          draw: () => drawStation(station)
+        });
+      });
+
+      obstacles.forEach(obstacle => {
+        objects.push({
+          y: height * obstacle.y,
+          draw: () => drawObstacle(obstacle)
+        });
+      });
+
+      objects.sort((a, b) => a.y - b.y);
+
+      let playerDrawn = false;
+      for (const object of objects) {
+        if (!playerDrawn && object.y > player.y) {
+          drawCharacter(time);
+          playerDrawn = true;
+        }
+        object.draw();
+      }
+
+      if (!playerDrawn) drawCharacter(time);
+      drawForeground();
+    }
+
+    function frame(timeMs) {
+      const time = timeMs / 1000;
+      const delta = Math.min(.04, previousTime ? (timeMs - previousTime) / 1000 : 0);
+      previousTime = timeMs;
+
+      update(delta);
+      drawWorld(time);
+
+      requestAnimationFrame(frame);
     }
 
     const keyDirections = {
       ArrowLeft: "left", KeyA: "left",
-      ArrowRight: "right", KeyD: "right"
+      ArrowRight: "right", KeyD: "right",
+      ArrowUp: "up", KeyW: "up",
+      ArrowDown: "down", KeyS: "down"
     };
 
     window.addEventListener("keydown", event => {
-      if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") {
+      if (event.code === "Space") {
         event.preventDefault();
         if (!event.repeat) jump();
         return;
@@ -377,8 +842,6 @@
 
       event.preventDefault();
       keys.add(direction);
-      targetStation = null;
-      statusEl.textContent = "Exploring the sanctuary";
     });
 
     window.addEventListener("keyup", event => {
@@ -394,466 +857,25 @@
       button.addEventListener("pointerdown", event => {
         event.preventDefault();
         button.classList.add("active");
-
-        if (direction === "jump" || direction === "up") {
-          jump();
-          return;
-        }
-
-        keys.add(direction);
-        targetStation = null;
-        statusEl.textContent = "Exploring the sanctuary";
         button.setPointerCapture(event.pointerId);
+
+        if (direction === "jump") {
+          jump();
+        } else {
+          keys.add(direction);
+        }
       });
 
       const stop = event => {
         event.preventDefault();
         button.classList.remove("active");
-        if (direction) keys.delete(direction);
+        if (direction !== "jump") keys.delete(direction);
       };
 
       button.addEventListener("pointerup", stop);
       button.addEventListener("pointercancel", stop);
       button.addEventListener("lostpointercapture", stop);
     });
-
-    canvas.addEventListener("click", event => {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      const clickedStation = stations.find(station => {
-        const point = stationPoint(station);
-        return Math.hypot(x - point.x, y - point.y) < Math.max(34, width * .04);
-      });
-
-      if (clickedStation) walkTo(clickedStation);
-    });
-
-    function drawBackground() {
-      const sky = ctx.createLinearGradient(0, 0, 0, height);
-      sky.addColorStop(0, "#9ab9ae");
-      sky.addColorStop(.31, "#b8c6a5");
-      sky.addColorStop(.52, "#526d4d");
-      sky.addColorStop(1, "#172d22");
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, width, height);
-
-      const sunlight = ctx.createRadialGradient(
-        width * .5, height * .2, 5,
-        width * .5, height * .2, height * .6
-      );
-      sunlight.addColorStop(0, "rgba(244, 224, 169, .32)");
-      sunlight.addColorStop(1, "rgba(244, 224, 169, 0)");
-      ctx.fillStyle = sunlight;
-      ctx.fillRect(0, 0, width, height);
-
-      // Distant rolling hills.
-      ctx.fillStyle = "#526d54";
-      ctx.beginPath();
-      ctx.moveTo(0, height * .46);
-      ctx.quadraticCurveTo(width * .15, height * .31, width * .32, height * .43);
-      ctx.quadraticCurveTo(width * .53, height * .29, width * .69, height * .43);
-      ctx.quadraticCurveTo(width * .85, height * .30, width, height * .42);
-      ctx.lineTo(width, height * .62);
-      ctx.lineTo(0, height * .62);
-      ctx.closePath();
-      ctx.fill();
-
-      // Pond.
-      ctx.fillStyle = "#375943";
-      ctx.beginPath();
-      ctx.ellipse(width * .12, height * .60, width * .22, height * .10, -.06, 0, Math.PI * 2);
-      ctx.fill();
-
-      const pond = ctx.createLinearGradient(0, height * .52, 0, height * .68);
-      pond.addColorStop(0, "#6f9b91");
-      pond.addColorStop(1, "#284d4b");
-      ctx.fillStyle = pond;
-      ctx.beginPath();
-      ctx.ellipse(width * .12, height * .59, width * .195, height * .075, -.06, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Forest floor.
-      const ground = ctx.createLinearGradient(0, height * .48, 0, height);
-      ground.addColorStop(0, "#526e43");
-      ground.addColorStop(.35, "#344f32");
-      ground.addColorStop(1, "#172d22");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, height * .48, width, height * .52);
-
-      // Perspective walking trail.
-      ctx.fillStyle = "#958d70";
-      ctx.beginPath();
-      ctx.moveTo(width * .46, height * .43);
-      ctx.lineTo(width * .54, height * .43);
-      ctx.lineTo(width * .86, height);
-      ctx.lineTo(width * .14, height);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(235, 220, 179, .15)";
-      ctx.beginPath();
-      ctx.moveTo(width * .49, height * .44);
-      ctx.lineTo(width * .51, height * .44);
-      ctx.lineTo(width * .58, height);
-      ctx.lineTo(width * .43, height);
-      ctx.closePath();
-      ctx.fill();
-
-      // Path stones.
-      for (let i = 1; i < 19; i++) {
-        const t = i / 20;
-        const y = height * (.45 + t * .51);
-        const x = width * (.5 + Math.sin(i * 4.7) * t * .20);
-        const size = Math.max(3, width * (.005 + t * .009));
-
-        ctx.fillStyle = i % 2
-          ? "rgba(61, 66, 51, .42)"
-          : "rgba(221, 207, 165, .36)";
-
-        ctx.beginPath();
-        ctx.ellipse(x, y, size, size * .35, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function drawTree(x, ground, scale) {
-      const trunkWidth = 19 * scale;
-      const trunkHeight = height * .30 * scale;
-      const top = ground - trunkHeight;
-
-      const trunk = ctx.createLinearGradient(x - trunkWidth, 0, x + trunkWidth, 0);
-      trunk.addColorStop(0, "#302d22");
-      trunk.addColorStop(.5, "#62533a");
-      trunk.addColorStop(1, "#332f24");
-      ctx.fillStyle = trunk;
-
-      ctx.beginPath();
-      ctx.moveTo(x - trunkWidth * .4, ground);
-      ctx.lineTo(x - trunkWidth * .25, top);
-      ctx.lineTo(x + trunkWidth * .25, top);
-      ctx.lineTo(x + trunkWidth * .6, ground);
-      ctx.closePath();
-      ctx.fill();
-
-      const canopyColors = ["#294632", "#38583b", "#456542"];
-      for (let i = 0; i < 5; i++) {
-        ctx.fillStyle = canopyColors[i % canopyColors.length];
-        ctx.beginPath();
-        ctx.ellipse(
-          x + (i - 2) * 23 * scale,
-          top - 30 * scale + Math.sin(i * 2.4) * 10 * scale,
-          36 * scale,
-          45 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-      }
-    }
-
-    function drawTrees() {
-      [
-        [-.02, .65, 1.4], [.10, .56, .82], [.25, .52, .56],
-        [.98, .63, 1.4], [.88, .55, .82], [.75, .51, .56],
-        [.34, .49, .4], [.67, .49, .4]
-      ].forEach(([x, y, scale]) => {
-        drawTree(width * x, height * y, scale);
-      });
-    }
-
-    function drawBirds(time) {
-      birds.forEach(bird => {
-        const x = (((bird.x + time * bird.speed * bird.direction) % 1) + 1) % 1 * width;
-        const y = height * bird.y + Math.sin(time * 2 + bird.phase) * 5;
-        const flap = Math.sin(time * 8 + bird.phase) * bird.size;
-
-        ctx.strokeStyle = "rgba(35, 48, 39, .82)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(x - bird.size, y);
-        ctx.quadraticCurveTo(x, y - flap, x + bird.size, y);
-        ctx.stroke();
-      });
-    }
-
-    function drawPlatform(platform) {
-      const r = platformRect(platform);
-      const x = r.x, y = r.y, w = r.w, h = r.h;
-
-      if (platform.type === "hill") {
-        ctx.fillStyle = "#324b2d";
-        ctx.beginPath();
-        ctx.moveTo(x, y + h);
-        ctx.quadraticCurveTo(x + w * .12, y + h * .08, x + w * .52, y);
-        ctx.quadraticCurveTo(x + w * .86, y - h * .04, x + w, y + h * .38);
-        ctx.lineTo(x + w, y + h);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.strokeStyle = "#78905a";
-        ctx.lineWidth = Math.max(2, h * .06);
-        ctx.beginPath();
-        ctx.moveTo(x + w * .17, y + h * .36);
-        ctx.quadraticCurveTo(x + w * .49, y + h * .04, x + w * .83, y + h * .17);
-        ctx.stroke();
-      } else if (platform.type === "rock") {
-        ctx.fillStyle = "#667062";
-        ctx.beginPath();
-        ctx.moveTo(x, y + h);
-        ctx.lineTo(x + w * .08, y + h * .42);
-        ctx.lineTo(x + w * .35, y + h * .1);
-        ctx.lineTo(x + w * .72, y + h * .02);
-        ctx.lineTo(x + w * .96, y + h * .43);
-        ctx.lineTo(x + w, y + h);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "rgba(223, 229, 200, .22)";
-        ctx.beginPath();
-        ctx.moveTo(x + w * .2, y + h * .44);
-        ctx.lineTo(x + w * .38, y + h * .16);
-        ctx.lineTo(x + w * .63, y + h * .12);
-        ctx.lineTo(x + w * .49, y + h * .44);
-        ctx.closePath();
-        ctx.fill();
-      } else if (platform.type === "stump") {
-        ctx.fillStyle = "#654a32";
-        ctx.fillRect(x + w * .13, y + h * .2, w * .74, h * .8);
-        ctx.fillStyle = "#a17b4d";
-        ctx.beginPath();
-        ctx.ellipse(x + w * .5, y + h * .2, w * .5, h * .2, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = "rgba(72, 48, 30, .65)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(x + w * .5, y + h * .2, w * .27, h * .095, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      } else if (platform.type === "log") {
-        ctx.fillStyle = "#684a31";
-        ctx.beginPath();
-        ctx.roundRect(x, y + h * .2, w, h * .72, h * .35);
-        ctx.fill();
-
-        ctx.fillStyle = "#a57b4e";
-        ctx.beginPath();
-        ctx.ellipse(x + w * .04, y + h * .56, h * .28, h * .36, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = "#5b422e";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(x + w * .04, y + h * .56, h * .16, h * .21, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-
-    function drawPlatforms() {
-      platforms.forEach(drawPlatform);
-    }
-
-    function drawStation(station) {
-      const { x, y } = stationPoint(station);
-      const scale = Math.max(.72, Math.min(1, height / 720));
-      const radius = 23 * scale;
-
-      // Signpost and shadow.
-      ctx.fillStyle = "rgba(14, 24, 15, .3)";
-      ctx.beginPath();
-      ctx.ellipse(x, y + 34 * scale, 22 * scale, 6 * scale, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "#544a35";
-      ctx.lineWidth = 5 * scale;
-      ctx.beginPath();
-      ctx.moveTo(x, y + 14 * scale);
-      ctx.lineTo(x, y + 43 * scale);
-      ctx.stroke();
-
-      // Emblem.
-      ctx.shadowColor = station.color;
-      ctx.shadowBlur = 12;
-      ctx.fillStyle = "#253c2b";
-      ctx.strokeStyle = station.color;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      ctx.fillStyle = station.color;
-      ctx.font = `bold ${20 * scale}px system-ui`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(station.icon, x, y);
-
-      ctx.font = `600 ${Math.max(10, 11 * scale)}px system-ui`;
-      const labelWidth = Math.max(64 * scale, ctx.measureText(station.label).width + 18);
-
-      ctx.fillStyle = "rgba(20, 37, 26, .9)";
-      ctx.beginPath();
-      ctx.roundRect(x - labelWidth / 2, y + radius + 5, labelWidth, 20 * scale, 7);
-      ctx.fill();
-
-      ctx.fillStyle = "#f3f1df";
-      ctx.fillText(station.label, x, y + radius + 15 * scale);
-    }
-
-    function drawCharacter(time) {
-      if (!avatar.complete || !avatar.naturalWidth) return;
-
-      const moving = keys.size > 0 || targetStation !== null || !player.grounded;
-      const bob = moving && player.grounded ? Math.abs(Math.sin(time * 11)) * 2 : 0;
-      const spriteHeight = avatarHeight();
-      const spriteWidth = spriteHeight * (avatar.naturalWidth / avatar.naturalHeight);
-
-      ctx.save();
-      ctx.translate(player.x, player.y + bob);
-      ctx.scale(player.facing, 1);
-      ctx.drawImage(avatar, -spriteWidth / 2, -spriteHeight, spriteWidth, spriteHeight);
-      ctx.restore();
-    }
-
-    function checkStationContact() {
-      if (activated) return;
-
-      // Use the avatar's approximate center so touching with its head/body counts.
-      const centerY = player.y - avatarHeight() * .52;
-
-      for (const station of stations) {
-        const point = stationPoint(station);
-        const contactDistance = Math.max(38, avatarHeight() * .42);
-
-        if (Math.hypot(player.x - point.x, centerY - point.y) < contactDistance) {
-          activateStation(station);
-          return;
-        }
-      }
-    }
-
-    function update(delta) {
-      if (activated) return;
-
-      if (targetStation) {
-        const point = stationPoint(targetStation);
-        const desiredY = point.y + avatarHeight() * .52;
-        const dx = point.x - player.x;
-        const dy = desiredY - player.y;
-        const distance = Math.hypot(dx, dy);
-
-        if (distance < 7) {
-          activateStation(targetStation);
-          return;
-        }
-
-        const speed = 190 * delta;
-        player.x += dx / distance * speed;
-        player.y += dy / distance * speed;
-        player.facing = dx < 0 ? -1 : 1;
-        player.grounded = false;
-        checkStationContact();
-        return;
-      }
-
-      const oldY = player.y;
-      let dx = 0;
-
-      if (keys.has("left")) dx -= 1;
-      if (keys.has("right")) dx += 1;
-
-      const moveSpeed = 190 * delta;
-      player.x += dx * moveSpeed;
-
-      if (dx) player.facing = dx < 0 ? -1 : 1;
-      player.x = Math.max(18, Math.min(width - 18, player.x));
-
-      // Gravity and jumping.
-      player.vy += Math.max(950, height * 1.65) * delta;
-      player.y += player.vy * delta;
-      player.grounded = false;
-
-      // Main ground collision.
-      const floor = groundY();
-      if (player.y >= floor) {
-        player.y = floor;
-        player.vy = 0;
-        player.grounded = true;
-      }
-
-      // Land on top of platforms while descending.
-      if (player.vy >= 0) {
-        const footWidth = Math.max(12, avatarHeight() * .16);
-
-        for (const platform of platforms) {
-          const r = platformRect(platform);
-          const overlapsX =
-            player.x + footWidth > r.x &&
-            player.x - footWidth < r.x + r.w;
-          const crossedTop = oldY <= r.y && player.y >= r.y;
-
-          if (overlapsX && crossedTop) {
-            player.y = r.y;
-            player.vy = 0;
-            player.grounded = true;
-          }
-        }
-      }
-
-      // Keep the player within the playable scene.
-      player.y = Math.max(height * .25, player.y);
-
-      // Walking or jumping into an emblem activates its destination.
-      checkStationContact();
-    }
-
-    function drawForeground() {
-      // Foreground foliage gives the scene extra depth.
-      ctx.fillStyle = "rgba(12, 31, 19, .72)";
-      ctx.beginPath();
-      ctx.moveTo(0, height);
-      ctx.lineTo(0, height * .78);
-      ctx.quadraticCurveTo(width * .08, height * .83, width * .17, height);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(width, height);
-      ctx.lineTo(width, height * .77);
-      ctx.quadraticCurveTo(width * .91, height * .84, width * .82, height);
-      ctx.closePath();
-      ctx.fill();
-
-      const vignette = ctx.createRadialGradient(
-        width * .5, height * .48, height * .18,
-        width * .5, height * .48, Math.max(width, height) * .75
-      );
-      vignette.addColorStop(0, "rgba(0,0,0,0)");
-      vignette.addColorStop(1, "rgba(5,15,9,.35)");
-      ctx.fillStyle = vignette;
-      ctx.fillRect(0, 0, width, height);
-    }
-
-    function frame(timeMs) {
-      const time = timeMs / 1000;
-      const delta = Math.min(.04, previousTime ? (timeMs - previousTime) / 1000 : 0);
-      previousTime = timeMs;
-
-      update(delta);
-
-      drawBackground();
-      drawTrees();
-      drawBirds(time);
-      drawPlatforms();
-      stations.forEach(drawStation);
-      drawCharacter(time);
-      drawForeground();
-
-      requestAnimationFrame(frame);
-    }
 
     requestAnimationFrame(frame);
   </script>

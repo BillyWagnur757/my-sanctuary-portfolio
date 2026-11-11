@@ -122,11 +122,15 @@
         font-size: .72rem;
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
   </style>
 </head>
 <body>
   <main id="scene">
-    <canvas id="world" aria-label="Bird sanctuary. Walk into a destination emblem to visit it."></canvas>
+    <canvas id="world" aria-label="Bird sanctuary. Move and jump into a destination emblem to visit it."></canvas>
 
     <header class="hud">
       <h1>BillyWagnur Sanctuary</h1>
@@ -158,12 +162,16 @@
       tiktok: "https://www.tiktok.com/@baggettball"
     };
 
-    // Keep these media files in the same folder as index.html.
+    // Keep avatar.png, aye.mp3, uh.mp3, and stupidsong.m4a
+    // in the same folder as this index.html file.
     const avatar = new Image();
     avatar.src = "./avatar.png";
 
     const decisionSound = new Audio("./aye.mp3");
     decisionSound.preload = "auto";
+
+    const jumpSound = new Audio("./uh.mp3");
+    jumpSound.preload = "auto";
 
     const backgroundMusic = new Audio("./stupidsong.m4a");
     backgroundMusic.loop = true;
@@ -172,7 +180,7 @@
 
     function startMusic() {
       backgroundMusic.play().catch(() => {
-        // Browsers may require the visitor to interact before playing audio.
+        // Most browsers wait for the visitor's first interaction before playing audio.
       });
     }
 
@@ -180,29 +188,34 @@
     window.addEventListener("pointerdown", startMusic, { once: true });
     window.addEventListener("keydown", startMusic, { once: true });
 
+    // The emblems are deliberately farther up the sanctuary path.
     const stations = [
-      { id: "youtube", label: "YouTube", icon: "▶", color: "#f07862", x: .16, y: .68 },
-      { id: "spotify", label: "Spotify", icon: "♫", color: "#a9cf83", x: .39, y: .60 },
-      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#efa0a6", x: .61, y: .60 },
-      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bd5ce", x: .84, y: .68 }
+      { id: "youtube", label: "YouTube", icon: "▶", color: "#f07862", x: .15, y: .57 },
+      { id: "spotify", label: "Spotify", icon: "♫", color: "#a9cf83", x: .38, y: .52 },
+      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#efa0a6", x: .62, y: .52 },
+      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bd5ce", x: .85, y: .57 }
     ];
 
-    // Collision boxes for foreground objects. Jump over these or walk around them.
+    // Collision obstacles. Jump over them or steer around them.
     const obstacles = [
-      { type: "rock",  x: .28, y: .79, w: .075, h: .055, blockW: .075, blockH: .05, height: 25 },
-      { type: "stump", x: .48, y: .73, w: .07, h: .12, blockW: .07, blockH: .08, height: 44 },
-      { type: "log",   x: .69, y: .79, w: .15, h: .055, blockW: .15, blockH: .045, height: 24 },
-      { type: "rock",  x: .91, y: .73, w: .07, h: .06, blockW: .07, blockH: .05, height: 28 },
-      { type: "rock",  x: .08, y: .76, w: .07, h: .055, blockW: .07, blockH: .05, height: 23 }
+      { type: "rock",  x: .18, y: .78, w: .075, h: .055, blockW: .055, blockH: .045, height: 27 },
+      { type: "log",   x: .36, y: .72, w: .16,  h: .060, blockW: .14,  blockH: .05,  height: 30 },
+      { type: "stump", x: .55, y: .78, w: .070, h: .12,  blockW: .060, blockH: .07,  height: 45 },
+      { type: "rock",  x: .73, y: .68, w: .080, h: .060, blockW: .065, blockH: .05,  height: 29 },
+      { type: "log",   x: .85, y: .76, w: .14,  h: .055, blockW: .13,  blockH: .045, height: 28 },
+      { type: "rock",  x: .28, y: .63, w: .065, h: .050, blockW: .05,  blockH: .04,  height: 23 },
+      { type: "stump", x: .47, y: .63, w: .060, h: .10,  blockW: .052, blockH: .06,  height: 39 },
+      { type: "rock",  x: .69, y: .59, w: .060, h: .045, blockW: .05,  blockH: .036, height: 22 }
     ];
 
+    // Trees add depth; trunks can also block the character's path.
     const trees = [
-      { x: .02, y: .69, scale: 1.15 },
-      { x: .10, y: .57, scale: .80 },
-      { x: .31, y: .54, scale: .64 },
-      { x: .70, y: .53, scale: .63 },
-      { x: .91, y: .57, scale: .82 },
-      { x: .99, y: .68, scale: 1.18 }
+      { x: .02, y: .68, scale: 1.20 },
+      { x: .10, y: .57, scale: .82 },
+      { x: .30, y: .54, scale: .62 },
+      { x: .71, y: .53, scale: .62 },
+      { x: .91, y: .57, scale: .84 },
+      { x: .99, y: .68, scale: 1.22 }
     ];
 
     const birds = Array.from({ length: 10 }, (_, i) => ({
@@ -230,14 +243,32 @@
     let pixelRatio = 1;
     let previousTime = 0;
     let activated = false;
+    let activationTimer = null;
 
     function groundY() {
       return height * .88;
     }
 
-    function avatarHeight() {
-      if (!avatar.naturalHeight) return Math.min(height * .20, 150);
-      return Math.min(height * .22, 175);
+    // The avatar appears smaller farther up the path.
+    function getPlayerScale() {
+      const near = height * .88;
+      const far = height * .48;
+      const depth = Math.max(0, Math.min(1, (player.y - far) / (near - far)));
+      return .34 + depth * .66;
+    }
+
+    function getAvatarDimensions() {
+      const scale = getPlayerScale();
+      const baseHeight = Math.min(height * .22, 175);
+      const spriteHeight = baseHeight * scale;
+      const aspect = avatar.naturalWidth && avatar.naturalHeight
+        ? avatar.naturalWidth / avatar.naturalHeight
+        : .72;
+
+      return {
+        width: spriteHeight * aspect,
+        height: spriteHeight
+      };
     }
 
     function resize() {
@@ -256,27 +287,29 @@
         player.grounded = true;
       } else {
         player.x = Math.min(width - 18, player.x);
-        player.y = Math.min(groundY(), player.y);
+        player.y = Math.min(groundY(), Math.max(height * .48, player.y));
       }
     }
 
     window.addEventListener("resize", resize);
     resize();
 
-    function playAye() {
-      decisionSound.currentTime = 0;
-      decisionSound.play().catch(error => {
-        console.warn("Could not play aye.mp3:", error);
+    function playSound(sound) {
+      sound.currentTime = 0;
+      sound.play().catch(error => {
+        console.warn(`Could not play ${sound.src}:`, error);
       });
     }
 
     function jump() {
       if (activated || !player.grounded) return;
+
       player.jumpVelocity = Math.max(430, height * .78);
       player.grounded = false;
+      playSound(jumpSound);
     }
 
-    function getObstacleRect(obstacle) {
+    function obstacleRect(obstacle) {
       return {
         x: width * obstacle.x,
         y: height * obstacle.y,
@@ -285,83 +318,99 @@
       };
     }
 
-    function hitsObstacle(x, y) {
-      const playerRadius = Math.max(9, avatarHeight() * .10);
+    function collidesWithObstacle(x, y) {
+      const playerRadius = Math.max(7, getAvatarDimensions().width * .11);
 
       for (const obstacle of obstacles) {
-        // A jump high enough to clear an object bypasses its ground collision.
+        // While high enough in the jump, the avatar can clear the obstacle.
         if (player.jumpZ > obstacle.height) continue;
 
-        const r = getObstacleRect(obstacle);
-        const nearestX = Math.max(r.x - r.w / 2, Math.min(x, r.x + r.w / 2));
-        const nearestY = Math.max(r.y - r.h / 2, Math.min(y, r.y + r.h / 2));
-        const dx = x - nearestX;
-        const dy = y - nearestY;
+        const rect = obstacleRect(obstacle);
+        const left = rect.x - rect.w / 2;
+        const right = rect.x + rect.w / 2;
+        const top = rect.y - rect.h / 2;
+        const bottom = rect.y + rect.h / 2;
 
-        if (dx * dx + dy * dy < playerRadius * playerRadius) return true;
+        const closestX = Math.max(left, Math.min(x, right));
+        const closestY = Math.max(top, Math.min(y, bottom));
+        const dx = x - closestX;
+        const dy = y - closestY;
+
+        if (dx * dx + dy * dy < playerRadius * playerRadius) {
+          return true;
+        }
       }
 
-      // Tree trunks are obstacles too.
+      // Tree trunks in the playable area also block movement.
       for (const tree of trees) {
-        if (tree.y < .60 || tree.x < .13 || tree.x > .87) continue;
+        if (tree.x < .13 || tree.x > .87) continue;
 
         const tx = width * tree.x;
         const ty = height * tree.y;
-        const radius = 12 * tree.scale;
+        const trunkRadius = 7 * tree.scale;
+        const playerRadius = Math.max(7, getAvatarDimensions().width * .10);
 
-        if (Math.hypot(x - tx, y - ty) < radius + playerRadius) return true;
+        if (Math.hypot(x - tx, y - ty) < trunkRadius + playerRadius) {
+          return true;
+        }
       }
 
       return false;
     }
 
     function movePlayer(dx, dy) {
-      // Resolve each axis separately so the character can slide around obstacles.
       const nextX = Math.max(14, Math.min(width - 14, player.x + dx));
-      if (!hitsObstacle(nextX, player.y)) player.x = nextX;
+      if (!collidesWithObstacle(nextX, player.y)) {
+        player.x = nextX;
+      }
 
-      const minY = height * .48;
-      const maxY = groundY();
-      const nextY = Math.max(minY, Math.min(maxY, player.y + dy));
-      if (!hitsObstacle(player.x, nextY)) player.y = nextY;
+      const nextY = Math.max(height * .48, Math.min(groundY(), player.y + dy));
+      if (!collidesWithObstacle(player.x, nextY)) {
+        player.y = nextY;
+      }
+    }
+
+    function activateStation(station) {
+      if (activated) return;
+
+      activated = true;
+      keys.clear();
+      statusEl.textContent = `Opening ${station.label}…`;
+      playSound(decisionSound);
+
+      activationTimer = setTimeout(() => {
+        window.location.href = destinations[station.id];
+      }, 400);
     }
 
     function checkEmblemTouch() {
       if (activated) return;
 
-      const spriteH = avatarHeight();
-      const spriteW = avatar.naturalWidth
-        ? spriteH * avatar.naturalWidth / avatar.naturalHeight
-        : spriteH * .7;
-
-      const avatarCenterY = player.y - player.jumpZ - spriteH * .52;
+      const dimensions = getAvatarDimensions();
+      const avatarCenterX = player.x;
+      const avatarCenterY = player.y - player.jumpZ - dimensions.height * .52;
 
       for (const station of stations) {
-        const x = width * station.x;
-        const bubbleY = height * station.y - 43;
-        const rx = 24 + spriteW * .31;
-        const ry = 24 + spriteH * .34;
+        const stationX = width * station.x;
+        const stationGroundY = height * station.y;
+        const emblemRadius = Math.max(17, Math.min(24, height * .032));
+        const emblemY = stationGroundY - emblemRadius - 10;
 
-        const withinX = Math.abs(player.x - x) < rx;
-        const withinY = Math.abs(avatarCenterY - bubbleY) < ry;
+        // A little tolerance makes touching the visible avatar/emblem feel natural.
+        const touchX = emblemRadius + dimensions.width * .28;
+        const touchY = emblemRadius + dimensions.height * .34;
 
-        if (withinX && withinY) {
-          activated = true;
-          statusEl.textContent = `Opening ${station.label}…`;
-          playAye();
-
-          // Brief pause lets the contact sound begin before navigation.
-          setTimeout(() => {
-            window.location.href = destinations[station.id];
-          }, 350);
-
+        if (
+          Math.abs(avatarCenterX - stationX) < touchX &&
+          Math.abs(avatarCenterY - emblemY) < touchY
+        ) {
+          activateStation(station);
           return;
         }
       }
     }
 
     function drawBackground() {
-      // Sky and distant atmospheric light.
       const sky = ctx.createLinearGradient(0, 0, 0, height);
       sky.addColorStop(0, "#8daea5");
       sky.addColorStop(.28, "#b8c5a5");
@@ -370,17 +419,17 @@
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, width, height);
 
-      const sun = ctx.createRadialGradient(
+      const sunlight = ctx.createRadialGradient(
         width * .53, height * .19, 2,
         width * .53, height * .19, height * .62
       );
-      sun.addColorStop(0, "rgba(255, 234, 176, .48)");
-      sun.addColorStop(.35, "rgba(244, 224, 169, .15)");
-      sun.addColorStop(1, "rgba(244, 224, 169, 0)");
-      ctx.fillStyle = sun;
+      sunlight.addColorStop(0, "rgba(255, 234, 176, .48)");
+      sunlight.addColorStop(.35, "rgba(244, 224, 169, .15)");
+      sunlight.addColorStop(1, "rgba(244, 224, 169, 0)");
+      ctx.fillStyle = sunlight;
       ctx.fillRect(0, 0, width, height);
 
-      // Layered distant hills create depth.
+      // Distant hills.
       ctx.fillStyle = "#81916c";
       ctx.beginPath();
       ctx.moveTo(0, height * .43);
@@ -391,6 +440,7 @@
       ctx.closePath();
       ctx.fill();
 
+      // Nearer hill layer.
       ctx.fillStyle = "#5b7655";
       ctx.beginPath();
       ctx.moveTo(0, height * .49);
@@ -401,7 +451,7 @@
       ctx.closePath();
       ctx.fill();
 
-      // Pond with bank and subtle reflections.
+      // Pond and bank.
       ctx.fillStyle = "#354f3c";
       ctx.beginPath();
       ctx.ellipse(width * .12, height * .62, width * .23, height * .105, -.06, 0, Math.PI * 2);
@@ -427,7 +477,7 @@
         ctx.stroke();
       }
 
-      // Forest floor with a bright center and dark foreground.
+      // Forest floor.
       const ground = ctx.createLinearGradient(0, height * .46, 0, height);
       ground.addColorStop(0, "#59744a");
       ground.addColorStop(.36, "#3b5936");
@@ -435,7 +485,7 @@
       ctx.fillStyle = ground;
       ctx.fillRect(0, height * .46, width, height * .54);
 
-      // Perspective trail narrows toward the horizon.
+      // Perspective trail.
       ctx.fillStyle = "#a49a7a";
       ctx.beginPath();
       ctx.moveTo(width * .475, height * .45);
@@ -451,7 +501,7 @@
       ctx.fillStyle = pathLight;
       ctx.fill();
 
-      // Perspective stones become larger toward the viewer.
+      // Perspective stones.
       for (let i = 1; i < 22; i++) {
         const t = i / 23;
         const y = height * (.47 + t * .50);
@@ -491,20 +541,21 @@
 
       const leaves = ["#263f2e", "#34553a", "#456643", "#526d46"];
       for (let i = 0; i < 6; i++) {
-        const clusterX = x + (i - 2.5) * 24 * scale;
-        const clusterY = top - 28 * scale + Math.sin(i * 2.4) * 12 * scale;
-
         ctx.fillStyle = leaves[i % leaves.length];
         ctx.beginPath();
         ctx.ellipse(
-          clusterX, clusterY,
-          38 * scale, 47 * scale,
-          0, 0, Math.PI * 2
+          x + (i - 2.5) * 24 * scale,
+          top - 28 * scale + Math.sin(i * 2.4) * 12 * scale,
+          38 * scale,
+          47 * scale,
+          0,
+          0,
+          Math.PI * 2
         );
         ctx.fill();
       }
 
-      // Warm light on one side of the canopy.
+      // Sunlit leaves.
       ctx.fillStyle = "rgba(173, 184, 112, .22)";
       ctx.beginPath();
       ctx.ellipse(x - 25 * scale, top - 54 * scale, 20 * scale, 9 * scale, -.55, 0, Math.PI * 2);
@@ -550,7 +601,7 @@
       const w = width * obstacle.w;
       const h = height * obstacle.h;
 
-      // Ground shadow.
+      // Shadow.
       ctx.fillStyle = "rgba(12, 21, 13, .32)";
       ctx.beginPath();
       ctx.ellipse(x, y + h * .45, w * .62, h * .28, 0, 0, Math.PI * 2);
@@ -610,25 +661,25 @@
 
     function drawStation(station) {
       const x = width * station.x;
-      const ground = height * station.y;
-      const scale = Math.max(.72, Math.min(1, height / 720));
-      const radius = 24 * scale;
-      const bubbleY = ground - 43 * scale;
+      const groundY = height * station.y;
+      const scale = Math.max(.68, Math.min(1, height / 720));
+      const radius = 23 * scale;
+      const bubbleY = groundY - radius - 10 * scale;
 
-      // Ground shadow and wooden signpost.
+      // Signpost shadow and post.
       ctx.fillStyle = "rgba(12, 22, 14, .3)";
       ctx.beginPath();
-      ctx.ellipse(x, ground + 2, 20 * scale, 6 * scale, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, groundY + 2, 20 * scale, 6 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = "#604a32";
       ctx.lineWidth = 5 * scale;
       ctx.beginPath();
       ctx.moveTo(x, bubbleY + radius * .7);
-      ctx.lineTo(x, ground);
+      ctx.lineTo(x, groundY);
       ctx.stroke();
 
-      // Glowing emblem.
+      // Glowing link emblem.
       ctx.shadowColor = station.color;
       ctx.shadowBlur = 16;
       ctx.fillStyle = "#233b2b";
@@ -659,29 +710,20 @@
     }
 
     function drawCharacter(time) {
-      const spriteH = avatarHeight();
-      const spriteW = avatar.naturalWidth
-        ? spriteH * avatar.naturalWidth / avatar.naturalHeight
-        : spriteH * .7;
+      const dimensions = getAvatarDimensions();
+      const moving = keys.size > 0;
+      const bob = player.grounded && moving ? Math.abs(Math.sin(time * 11)) * 2 : 0;
+      const drawY = player.y - player.jumpZ + bob;
 
-      const bob = player.grounded && (keys.has("left") || keys.has("right") || keys.has("up") || keys.has("down"))
-        ? Math.abs(Math.sin(time * 11)) * 2
-        : 0;
-
-      ctx.save();
-      ctx.translate(player.x, player.y - player.jumpZ + bob);
-      ctx.scale(player.facing, 1);
-
-      // Shadow stays on the ground while the avatar jumps.
-      ctx.restore();
-
-      ctx.fillStyle = `rgba(10, 20, 13, ${Math.max(.12, .36 - player.jumpZ / 700)})`;
+      // Ground shadow remains on the path as the avatar jumps.
+      const shadowOpacity = Math.max(.10, .34 - player.jumpZ / 700);
+      ctx.fillStyle = `rgba(10, 20, 13, ${shadowOpacity})`;
       ctx.beginPath();
       ctx.ellipse(
         player.x,
         player.y + 2,
-        Math.max(12, spriteW * .24) * (1 + player.jumpZ / 250),
-        Math.max(4, spriteH * .045),
+        Math.max(10, dimensions.width * .24) * (1 + player.jumpZ / 250),
+        Math.max(3, dimensions.height * .045),
         0,
         0,
         Math.PI * 2
@@ -691,20 +733,33 @@
       if (!avatar.complete || !avatar.naturalWidth) {
         ctx.fillStyle = "#20222b";
         ctx.beginPath();
-        ctx.ellipse(player.x, player.y - player.jumpZ - 30, 18, 30, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          player.x,
+          drawY - dimensions.height * .48,
+          dimensions.width * .3,
+          dimensions.height * .48,
+          0,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
         return;
       }
 
       ctx.save();
-      ctx.translate(player.x, player.y - player.jumpZ + bob);
+      ctx.translate(player.x, drawY);
       ctx.scale(player.facing, 1);
-      ctx.drawImage(avatar, -spriteW / 2, -spriteH, spriteW, spriteH);
+      ctx.drawImage(
+        avatar,
+        -dimensions.width / 2,
+        -dimensions.height,
+        dimensions.width,
+        dimensions.height
+      );
       ctx.restore();
     }
 
     function drawForeground() {
-      // Dark foliage frames the scene and adds a foreground depth layer.
       ctx.fillStyle = "rgba(10, 27, 16, .78)";
 
       ctx.beginPath();
@@ -721,7 +776,6 @@
       ctx.closePath();
       ctx.fill();
 
-      // Vignette.
       const shade = ctx.createRadialGradient(
         width * .5, height * .48, height * .16,
         width * .5, height * .48, Math.max(width, height) * .76
@@ -769,38 +823,37 @@
       drawBackground();
       drawBirds(time);
 
-      // Distant hills sit behind the nearer forest.
+      // Distant hills behind the closer forest.
       drawHill(width * .19, height * .48, width * .30, height * .13, "#496444");
       drawHill(width * .83, height * .47, width * .34, height * .16, "#3e5b3b");
 
-      // Draw trees, stations, and obstacles in depth order relative to the avatar.
-      const objects = [];
+      const depthObjects = [];
 
       trees.forEach(tree => {
-        objects.push({
+        depthObjects.push({
           y: height * tree.y,
           draw: () => drawTree(tree)
         });
       });
 
       stations.forEach(station => {
-        objects.push({
+        depthObjects.push({
           y: height * station.y,
           draw: () => drawStation(station)
         });
       });
 
       obstacles.forEach(obstacle => {
-        objects.push({
+        depthObjects.push({
           y: height * obstacle.y,
           draw: () => drawObstacle(obstacle)
         });
       });
 
-      objects.sort((a, b) => a.y - b.y);
+      depthObjects.sort((a, b) => a.y - b.y);
 
       let playerDrawn = false;
-      for (const object of objects) {
+      for (const object of depthObjects) {
         if (!playerDrawn && object.y > player.y) {
           drawCharacter(time);
           playerDrawn = true;
@@ -810,17 +863,6 @@
 
       if (!playerDrawn) drawCharacter(time);
       drawForeground();
-    }
-
-    function frame(timeMs) {
-      const time = timeMs / 1000;
-      const delta = Math.min(.04, previousTime ? (timeMs - previousTime) / 1000 : 0);
-      previousTime = timeMs;
-
-      update(delta);
-      drawWorld(time);
-
-      requestAnimationFrame(frame);
     }
 
     const keyDirections = {
@@ -876,6 +918,18 @@
       button.addEventListener("pointercancel", stop);
       button.addEventListener("lostpointercapture", stop);
     });
+
+    let previousTime = 0;
+
+    function frame(timeMs) {
+      const time = timeMs / 1000;
+      const delta = Math.min(.04, previousTime ? (timeMs - previousTime) / 1000 : 0);
+      previousTime = timeMs;
+
+      update(delta);
+      drawWorld(time);
+      requestAnimationFrame(frame);
+    }
 
     requestAnimationFrame(frame);
   </script>

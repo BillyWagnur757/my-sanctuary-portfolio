@@ -13,7 +13,7 @@
       margin: 0;
       overflow: hidden;
       background: #172d22;
-      color: white;
+      color: #fff;
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     }
 
@@ -22,18 +22,19 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      touch-action: none;
     }
 
     canvas {
       display: block;
       width: 100%;
       height: 100%;
-      cursor: pointer;
+      cursor: crosshair;
     }
 
     .hud, .status, .quick-nav {
       position: absolute;
-      background: rgba(15, 36, 27, .82);
+      background: rgba(15, 36, 27, .84);
       border: 1px solid rgba(220, 239, 209, .4);
       box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
       backdrop-filter: blur(8px);
@@ -64,6 +65,7 @@
     .status {
       top: 16px;
       right: 16px;
+      max-width: 290px;
       padding: 10px 14px;
       border-radius: 12px;
       font-size: .82rem;
@@ -82,78 +84,93 @@
       overflow-x: auto;
     }
 
+    .nav-btn, .control-btn {
+      border: 1px solid rgba(220, 239, 209, .45);
+      background: #294a38;
+      color: #fff;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      user-select: none;
+      touch-action: none;
+    }
+
     .nav-btn {
       flex: 0 0 auto;
       padding: 9px 13px;
-      border: 1px solid rgba(220, 239, 209, .45);
       border-radius: 999px;
-      background: #294a38;
-      color: white;
-      font: inherit;
       font-size: .82rem;
-      font-weight: 650;
-      cursor: pointer;
+      touch-action: manipulation;
     }
 
-    .nav-btn:hover, .nav-btn:focus-visible {
+    .nav-btn:hover, .nav-btn:focus-visible,
+    .control-btn:hover, .control-btn:focus-visible {
       background: #54784d;
       outline: 2px solid #d3e9b9;
       outline-offset: 2px;
     }
 
-    .dpad {
+    .controls {
       position: absolute;
       right: 16px;
-      bottom: 82px;
+      bottom: 88px;
       display: none;
-      width: 132px;
-      height: 132px;
+      width: 144px;
+      height: 144px;
       touch-action: none;
     }
 
-    .dpad button {
+    .control-btn {
       position: absolute;
+      display: grid;
+      place-items: center;
       width: 44px;
       height: 44px;
-      border: 1px solid rgba(230, 242, 217, .7);
       border-radius: 12px;
-      background: rgba(37, 72, 52, .82);
-      color: white;
-      font-size: 1.15rem;
-      touch-action: none;
-      user-select: none;
+      background: rgba(37, 72, 52, .88);
+      font-size: 1.1rem;
     }
 
-    .dpad [data-dir="up"] { top: 0; left: 44px; }
-    .dpad [data-dir="down"] { bottom: 0; left: 44px; }
-    .dpad [data-dir="left"] { top: 44px; left: 0; }
-    .dpad [data-dir="right"] { top: 44px; right: 0; }
+    .control-btn.active { background: #54784d; }
+
+    .control-btn[data-dir="up"] { top: 0; left: 50px; }
+    .control-btn[data-dir="down"] { bottom: 0; left: 50px; }
+    .control-btn[data-dir="left"] { top: 50px; left: 0; }
+    .control-btn[data-dir="right"] { top: 50px; right: 0; }
+    .control-btn[data-dir="jump"] {
+      top: 50px;
+      left: 50px;
+      border-radius: 50%;
+      background: rgba(117, 91, 56, .9);
+    }
 
     @media (max-width: 650px) {
-      .dpad { display: block; }
+      .controls { display: block; }
       .hud { top: 10px; left: 10px; padding: 10px 12px; }
       .hud h1 { font-size: .88rem; }
-      .hud p { font-size: .73rem; }
-
+      .hud p { font-size: .72rem; }
       .status {
         top: 82px;
         right: 10px;
         max-width: 55%;
         padding: 8px 10px;
-        font-size: .73rem;
+        font-size: .72rem;
       }
-
       .nav-btn { padding: 8px 11px; font-size: .75rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; }
     }
   </style>
 </head>
 <body>
   <main id="scene">
-    <canvas id="world" aria-label="Bird sanctuary. Select a destination to walk there."></canvas>
+    <canvas id="world" aria-label="Bird sanctuary. Walk, jump, and touch a destination emblem to visit it."></canvas>
 
     <header class="hud">
       <h1>BillyWagnur Sanctuary</h1>
-      <p>Use WASD or arrow keys to explore, or select a destination.</p>
+      <p>WASD / arrows to move • Space / Up to jump • Touch an emblem to visit</p>
     </header>
 
     <div class="status" id="status" aria-live="polite">
@@ -167,11 +184,12 @@
       <button class="nav-btn" data-station="tiktok">TikTok</button>
     </nav>
 
-    <div class="dpad" aria-label="Movement controls">
-      <button type="button" data-dir="up" aria-label="Walk up">▲</button>
-      <button type="button" data-dir="down" aria-label="Walk down">▼</button>
-      <button type="button" data-dir="left" aria-label="Walk left">◀</button>
-      <button type="button" data-dir="right" aria-label="Walk right">▶</button>
+    <div class="controls" aria-label="Movement controls">
+      <button class="control-btn" data-dir="up" aria-label="Jump">▲</button>
+      <button class="control-btn" data-dir="left" aria-label="Move left">◀</button>
+      <button class="control-btn" data-dir="jump" aria-label="Jump">●</button>
+      <button class="control-btn" data-dir="right" aria-label="Move right">▶</button>
+      <button class="control-btn" data-dir="down" aria-label="Move down">▼</button>
     </div>
   </main>
 
@@ -187,6 +205,7 @@
       tiktok: "https://www.tiktok.com/@baggettball"
     };
 
+    // Keep these media files in the same repository folder as index.html.
     const avatar = new Image();
     avatar.src = "./avatar.png";
 
@@ -200,21 +219,40 @@
 
     function startBackgroundMusic() {
       backgroundMusic.play().catch(() => {
-        // Browsers often block autoplay until a user interaction happens.
+        // The browser may wait for the visitor's first interaction.
       });
     }
+
     startBackgroundMusic();
     window.addEventListener("pointerdown", startBackgroundMusic, { once: true });
     window.addEventListener("keydown", startBackgroundMusic, { once: true });
 
     const stations = [
-      { id: "youtube", label: "YouTube", icon: "▶", color: "#e76b58", x: .20, y: .49 },
-      { id: "spotify", label: "Spotify", icon: "♫", color: "#9fc27e", x: .40, y: .43 },
-      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#e99b9c", x: .60, y: .43 },
-      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bc5c0", x: .80, y: .49 }
+      { id: "youtube", label: "YouTube", icon: "▶", color: "#e76b58", x: .20, y: .62 },
+      { id: "spotify", label: "Spotify", icon: "♫", color: "#9fc27e", x: .40, y: .57 },
+      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#e99b9c", x: .60, y: .57 },
+      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bc5c0", x: .80, y: .62 }
     ];
 
-    const player = { x: 0, y: 0, facing: 1 };
+    // Raised surfaces the player can jump onto and stand on.
+    // Positions and sizes are proportional to the screen.
+    const platforms = [
+      { type: "hill",  x: .04, y: .69, w: .22, h: .15 },
+      { type: "rock",  x: .31, y: .75, w: .105, h: .075 },
+      { type: "stump", x: .45, y: .68, w: .095, h: .14 },
+      { type: "log",   x: .62, y: .75, w: .18, h: .065 },
+      { type: "hill",  x: .78, y: .68, w: .20, h: .16 },
+      { type: "rock",  x: .48, y: .54, w: .075, h: .06 }
+    ];
+
+    const player = {
+      x: 0,
+      y: 0,       // feet position
+      vy: 0,
+      facing: 1,
+      grounded: false
+    };
+
     const keys = new Set();
 
     let width = 0;
@@ -223,8 +261,9 @@
     let targetStation = null;
     let previousTime = 0;
     let navigationTimer = null;
+    let activated = false;
 
-    const birds = Array.from({ length: 9 }, (_, i) => ({
+    const birds = Array.from({ length: 10 }, (_, i) => ({
       x: Math.random(),
       y: .12 + Math.random() * .24,
       speed: .014 + Math.random() * .025,
@@ -232,6 +271,24 @@
       size: 3 + Math.random() * 3,
       direction: i % 2 ? 1 : -1
     }));
+
+    function groundY() {
+      return height * .84;
+    }
+
+    function platformRect(platform) {
+      return {
+        x: width * platform.x,
+        y: height * platform.y,
+        w: width * platform.w,
+        h: height * platform.h
+      };
+    }
+
+    function avatarHeight() {
+      if (!avatar.naturalHeight) return Math.min(height * .20, 150);
+      return Math.min(height * .22, 175);
+    }
 
     function resize() {
       const rect = canvas.getBoundingClientRect();
@@ -245,36 +302,48 @@
 
       if (!player.x) {
         player.x = width * .5;
-        player.y = height * .78;
+        player.y = groundY();
+        player.grounded = true;
       } else {
-        player.x = Math.min(width - 20, player.x);
-        player.y = Math.min(height - 60, player.y);
+        player.x = Math.max(12, Math.min(width - 12, player.x));
+        player.y = Math.min(groundY(), player.y);
       }
     }
 
     window.addEventListener("resize", resize);
     resize();
 
-    function pointFor(station) {
+    function stationPoint(station) {
       return { x: width * station.x, y: height * station.y };
     }
 
-    function walkTo(station) {
-      if (!station) return;
-
-      if (navigationTimer) {
-        clearTimeout(navigationTimer);
-        navigationTimer = null;
-      }
-
-      targetStation = station;
-      keys.clear();
-      statusEl.textContent = `Walking to ${station.label}…`;
-
+    function playDecisionSound() {
       decisionSound.currentTime = 0;
       decisionSound.play().catch(error => {
         console.warn("Could not play aye.mp3:", error);
       });
+    }
+
+    function activateStation(station) {
+      if (!station || activated) return;
+      activated = true;
+      targetStation = null;
+      keys.clear();
+      statusEl.textContent = `Opening ${station.label}…`;
+      playDecisionSound();
+
+      navigationTimer = setTimeout(() => {
+        window.location.href = destinations[station.id];
+      }, 500);
+    }
+
+    function walkTo(station) {
+      if (!station || activated) return;
+
+      targetStation = station;
+      keys.clear();
+      statusEl.textContent = `Walking to ${station.label}…`;
+      playDecisionSound();
     }
 
     document.querySelectorAll(".nav-btn").forEach(button => {
@@ -284,26 +353,31 @@
       });
     });
 
+    function jump() {
+      if (player.grounded && !targetStation && !activated) {
+        player.vy = -Math.max(390, height * .72);
+        player.grounded = false;
+      }
+    }
+
     const keyDirections = {
-      ArrowUp: "up", KeyW: "up",
-      ArrowDown: "down", KeyS: "down",
       ArrowLeft: "left", KeyA: "left",
       ArrowRight: "right", KeyD: "right"
     };
 
     window.addEventListener("keydown", event => {
+      if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") {
+        event.preventDefault();
+        if (!event.repeat) jump();
+        return;
+      }
+
       const direction = keyDirections[event.code];
       if (!direction) return;
 
       event.preventDefault();
       keys.add(direction);
       targetStation = null;
-
-      if (navigationTimer) {
-        clearTimeout(navigationTimer);
-        navigationTimer = null;
-      }
-
       statusEl.textContent = "Exploring the sanctuary";
     });
 
@@ -314,26 +388,28 @@
 
     window.addEventListener("blur", () => keys.clear());
 
-    document.querySelectorAll(".dpad button").forEach(button => {
+    document.querySelectorAll(".control-btn").forEach(button => {
       const direction = button.dataset.dir;
 
       button.addEventListener("pointerdown", event => {
         event.preventDefault();
-        keys.add(direction);
-        targetStation = null;
+        button.classList.add("active");
 
-        if (navigationTimer) {
-          clearTimeout(navigationTimer);
-          navigationTimer = null;
+        if (direction === "jump" || direction === "up") {
+          jump();
+          return;
         }
 
-        button.setPointerCapture(event.pointerId);
+        keys.add(direction);
+        targetStation = null;
         statusEl.textContent = "Exploring the sanctuary";
+        button.setPointerCapture(event.pointerId);
       });
 
       const stop = event => {
         event.preventDefault();
-        keys.delete(direction);
+        button.classList.remove("active");
+        if (direction) keys.delete(direction);
       };
 
       button.addEventListener("pointerup", stop);
@@ -347,7 +423,7 @@
       const y = event.clientY - rect.top;
 
       const clickedStation = stations.find(station => {
-        const point = pointFor(station);
+        const point = stationPoint(station);
         return Math.hypot(x - point.x, y - point.y) < Math.max(34, width * .04);
       });
 
@@ -357,8 +433,8 @@
     function drawBackground() {
       const sky = ctx.createLinearGradient(0, 0, 0, height);
       sky.addColorStop(0, "#9ab9ae");
-      sky.addColorStop(.33, "#b8c6a5");
-      sky.addColorStop(.53, "#526d4d");
+      sky.addColorStop(.31, "#b8c6a5");
+      sky.addColorStop(.52, "#526d4d");
       sky.addColorStop(1, "#172d22");
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, width, height);
@@ -372,15 +448,19 @@
       ctx.fillStyle = sunlight;
       ctx.fillRect(0, 0, width, height);
 
+      // Distant rolling hills.
       ctx.fillStyle = "#526d54";
       ctx.beginPath();
-      ctx.moveTo(0, height * .45);
-      ctx.quadraticCurveTo(width * .24, height * .28, width * .47, height * .43);
-      ctx.quadraticCurveTo(width * .72, height * .27, width, height * .42);
-      ctx.lineTo(width, height * .58);
-      ctx.lineTo(0, height * .58);
+      ctx.moveTo(0, height * .46);
+      ctx.quadraticCurveTo(width * .15, height * .31, width * .32, height * .43);
+      ctx.quadraticCurveTo(width * .53, height * .29, width * .69, height * .43);
+      ctx.quadraticCurveTo(width * .85, height * .30, width, height * .42);
+      ctx.lineTo(width, height * .62);
+      ctx.lineTo(0, height * .62);
+      ctx.closePath();
       ctx.fill();
 
+      // Pond.
       ctx.fillStyle = "#375943";
       ctx.beginPath();
       ctx.ellipse(width * .12, height * .60, width * .22, height * .10, -.06, 0, Math.PI * 2);
@@ -394,38 +474,54 @@
       ctx.ellipse(width * .12, height * .59, width * .195, height * .075, -.06, 0, Math.PI * 2);
       ctx.fill();
 
-      const ground = ctx.createLinearGradient(0, height * .43, 0, height);
-      ground.addColorStop(0, "#425c3b");
+      // Forest floor.
+      const ground = ctx.createLinearGradient(0, height * .48, 0, height);
+      ground.addColorStop(0, "#526e43");
+      ground.addColorStop(.35, "#344f32");
       ground.addColorStop(1, "#172d22");
       ctx.fillStyle = ground;
-      ctx.fillRect(0, height * .43, width, height * .57);
+      ctx.fillRect(0, height * .48, width, height * .52);
 
-      ctx.fillStyle = "#9c9275";
+      // Perspective walking trail.
+      ctx.fillStyle = "#958d70";
       ctx.beginPath();
       ctx.moveTo(width * .46, height * .43);
       ctx.lineTo(width * .54, height * .43);
-      ctx.lineTo(width * .83, height);
-      ctx.lineTo(width * .17, height);
+      ctx.lineTo(width * .86, height);
+      ctx.lineTo(width * .14, height);
       ctx.closePath();
       ctx.fill();
 
-      for (let i = 1; i < 17; i++) {
-        const t = i / 18;
-        const y = height * (.45 + t * .5);
-        const x = width * (.5 + Math.sin(i * 4.7) * t * .19);
-        const size = Math.max(3, width * (.005 + t * .01));
+      ctx.fillStyle = "rgba(235, 220, 179, .15)";
+      ctx.beginPath();
+      ctx.moveTo(width * .49, height * .44);
+      ctx.lineTo(width * .51, height * .44);
+      ctx.lineTo(width * .58, height);
+      ctx.lineTo(width * .43, height);
+      ctx.closePath();
+      ctx.fill();
 
-        ctx.fillStyle = i % 2 ? "rgba(61, 66, 51, .42)" : "rgba(221, 207, 165, .34)";
+      // Path stones.
+      for (let i = 1; i < 19; i++) {
+        const t = i / 20;
+        const y = height * (.45 + t * .51);
+        const x = width * (.5 + Math.sin(i * 4.7) * t * .20);
+        const size = Math.max(3, width * (.005 + t * .009));
+
+        ctx.fillStyle = i % 2
+          ? "rgba(61, 66, 51, .42)"
+          : "rgba(221, 207, 165, .36)";
+
         ctx.beginPath();
         ctx.ellipse(x, y, size, size * .35, 0, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    function drawTree(x, groundY, scale) {
+    function drawTree(x, ground, scale) {
       const trunkWidth = 19 * scale;
       const trunkHeight = height * .30 * scale;
-      const top = groundY - trunkHeight;
+      const top = ground - trunkHeight;
 
       const trunk = ctx.createLinearGradient(x - trunkWidth, 0, x + trunkWidth, 0);
       trunk.addColorStop(0, "#302d22");
@@ -434,17 +530,16 @@
       ctx.fillStyle = trunk;
 
       ctx.beginPath();
-      ctx.moveTo(x - trunkWidth * .4, groundY);
+      ctx.moveTo(x - trunkWidth * .4, ground);
       ctx.lineTo(x - trunkWidth * .25, top);
       ctx.lineTo(x + trunkWidth * .25, top);
-      ctx.lineTo(x + trunkWidth * .6, groundY);
+      ctx.lineTo(x + trunkWidth * .6, ground);
       ctx.closePath();
       ctx.fill();
 
-      const colors = ["#294632", "#38583b", "#456542"];
-
+      const canopyColors = ["#294632", "#38583b", "#456542"];
       for (let i = 0; i < 5; i++) {
-        ctx.fillStyle = colors[i % colors.length];
+        ctx.fillStyle = canopyColors[i % canopyColors.length];
         ctx.beginPath();
         ctx.ellipse(
           x + (i - 2) * 23 * scale,
@@ -461,9 +556,9 @@
 
     function drawTrees() {
       [
-        [-.02, .64, 1.4], [.10, .55, .82], [.25, .51, .56],
-        [.98, .62, 1.4], [.88, .54, .82], [.75, .50, .56],
-        [.34, .48, .4], [.67, .48, .4]
+        [-.02, .65, 1.4], [.10, .56, .82], [.25, .52, .56],
+        [.98, .63, 1.4], [.88, .55, .82], [.75, .51, .56],
+        [.34, .49, .4], [.67, .49, .4]
       ].forEach(([x, y, scale]) => {
         drawTree(width * x, height * y, scale);
       });
@@ -475,7 +570,7 @@
         const y = height * bird.y + Math.sin(time * 2 + bird.phase) * 5;
         const flap = Math.sin(time * 8 + bird.phase) * bird.size;
 
-        ctx.strokeStyle = "rgba(35, 48, 39, .8)";
+        ctx.strokeStyle = "rgba(35, 48, 39, .82)";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(x - bird.size, y);
@@ -484,18 +579,103 @@
       });
     }
 
+    function drawPlatform(platform) {
+      const r = platformRect(platform);
+      const x = r.x, y = r.y, w = r.w, h = r.h;
+
+      if (platform.type === "hill") {
+        ctx.fillStyle = "#324b2d";
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.quadraticCurveTo(x + w * .12, y + h * .08, x + w * .52, y);
+        ctx.quadraticCurveTo(x + w * .86, y - h * .04, x + w, y + h * .38);
+        ctx.lineTo(x + w, y + h);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#78905a";
+        ctx.lineWidth = Math.max(2, h * .06);
+        ctx.beginPath();
+        ctx.moveTo(x + w * .17, y + h * .36);
+        ctx.quadraticCurveTo(x + w * .49, y + h * .04, x + w * .83, y + h * .17);
+        ctx.stroke();
+      } else if (platform.type === "rock") {
+        ctx.fillStyle = "#667062";
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.lineTo(x + w * .08, y + h * .42);
+        ctx.lineTo(x + w * .35, y + h * .1);
+        ctx.lineTo(x + w * .72, y + h * .02);
+        ctx.lineTo(x + w * .96, y + h * .43);
+        ctx.lineTo(x + w, y + h);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(223, 229, 200, .22)";
+        ctx.beginPath();
+        ctx.moveTo(x + w * .2, y + h * .44);
+        ctx.lineTo(x + w * .38, y + h * .16);
+        ctx.lineTo(x + w * .63, y + h * .12);
+        ctx.lineTo(x + w * .49, y + h * .44);
+        ctx.closePath();
+        ctx.fill();
+      } else if (platform.type === "stump") {
+        ctx.fillStyle = "#654a32";
+        ctx.fillRect(x + w * .13, y + h * .2, w * .74, h * .8);
+        ctx.fillStyle = "#a17b4d";
+        ctx.beginPath();
+        ctx.ellipse(x + w * .5, y + h * .2, w * .5, h * .2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(72, 48, 30, .65)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(x + w * .5, y + h * .2, w * .27, h * .095, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (platform.type === "log") {
+        ctx.fillStyle = "#684a31";
+        ctx.beginPath();
+        ctx.roundRect(x, y + h * .2, w, h * .72, h * .35);
+        ctx.fill();
+
+        ctx.fillStyle = "#a57b4e";
+        ctx.beginPath();
+        ctx.ellipse(x + w * .04, y + h * .56, h * .28, h * .36, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#5b422e";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(x + w * .04, y + h * .56, h * .16, h * .21, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    function drawPlatforms() {
+      platforms.forEach(drawPlatform);
+    }
+
     function drawStation(station) {
-      const { x, y } = pointFor(station);
-      const scale = Math.max(.7, Math.min(1, height / 720));
+      const { x, y } = stationPoint(station);
+      const scale = Math.max(.72, Math.min(1, height / 720));
       const radius = 23 * scale;
+
+      // Signpost and shadow.
+      ctx.fillStyle = "rgba(14, 24, 15, .3)";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 34 * scale, 22 * scale, 6 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
 
       ctx.strokeStyle = "#544a35";
       ctx.lineWidth = 5 * scale;
       ctx.beginPath();
       ctx.moveTo(x, y + 14 * scale);
-      ctx.lineTo(x, y + 42 * scale);
+      ctx.lineTo(x, y + 43 * scale);
       ctx.stroke();
 
+      // Emblem.
+      ctx.shadowColor = station.color;
+      ctx.shadowBlur = 12;
       ctx.fillStyle = "#253c2b";
       ctx.strokeStyle = station.color;
       ctx.lineWidth = 2;
@@ -503,6 +683,7 @@
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
       ctx.fillStyle = station.color;
       ctx.font = `bold ${20 * scale}px system-ui`;
@@ -513,7 +694,7 @@
       ctx.font = `600 ${Math.max(10, 11 * scale)}px system-ui`;
       const labelWidth = Math.max(64 * scale, ctx.measureText(station.label).width + 18);
 
-      ctx.fillStyle = "rgba(20, 37, 26, .88)";
+      ctx.fillStyle = "rgba(20, 37, 26, .9)";
       ctx.beginPath();
       ctx.roundRect(x - labelWidth / 2, y + radius + 5, labelWidth, 20 * scale, 7);
       ctx.fill();
@@ -525,65 +706,135 @@
     function drawCharacter(time) {
       if (!avatar.complete || !avatar.naturalWidth) return;
 
-      const moving = keys.size > 0 || targetStation !== null;
-      const bob = moving ? Math.abs(Math.sin(time * 11)) * 2 : 0;
-      const maxHeight = Math.min(height * .24, 190);
-      const scale = maxHeight / avatar.naturalHeight;
-      const spriteWidth = avatar.naturalWidth * scale;
-      const spriteHeight = avatar.naturalHeight * scale;
+      const moving = keys.size > 0 || targetStation !== null || !player.grounded;
+      const bob = moving && player.grounded ? Math.abs(Math.sin(time * 11)) * 2 : 0;
+      const spriteHeight = avatarHeight();
+      const spriteWidth = spriteHeight * (avatar.naturalWidth / avatar.naturalHeight);
 
       ctx.save();
       ctx.translate(player.x, player.y + bob);
       ctx.scale(player.facing, 1);
-      ctx.drawImage(
-        avatar,
-        -spriteWidth / 2,
-        -spriteHeight + 8,
-        spriteWidth,
-        spriteHeight
-      );
+      ctx.drawImage(avatar, -spriteWidth / 2, -spriteHeight, spriteWidth, spriteHeight);
       ctx.restore();
     }
 
-    function update(delta) {
-      let dx = 0;
-      let dy = 0;
+    function checkStationContact() {
+      if (activated) return;
 
-      if (targetStation) {
-        const target = pointFor(targetStation);
-        dx = target.x - player.x;
-        dy = target.y + 43 - player.y;
+      // Use the avatar's approximate center so touching with its head/body counts.
+      const centerY = player.y - avatarHeight() * .52;
 
-        if (Math.hypot(dx, dy) < 10) {
-          const arrived = targetStation;
-          targetStation = null;
-          statusEl.textContent = `Opening ${arrived.label}…`;
+      for (const station of stations) {
+        const point = stationPoint(station);
+        const contactDistance = Math.max(38, avatarHeight() * .42);
 
-          navigationTimer = setTimeout(() => {
-            window.location.href = destinations[arrived.id];
-          }, 600);
-
+        if (Math.hypot(player.x - point.x, centerY - point.y) < contactDistance) {
+          activateStation(station);
           return;
         }
-      } else {
-        if (keys.has("left")) dx -= 1;
-        if (keys.has("right")) dx += 1;
-        if (keys.has("up")) dy -= 1;
-        if (keys.has("down")) dy += 1;
+      }
+    }
+
+    function update(delta) {
+      if (activated) return;
+
+      if (targetStation) {
+        const point = stationPoint(targetStation);
+        const desiredY = point.y + avatarHeight() * .52;
+        const dx = point.x - player.x;
+        const dy = desiredY - player.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < 7) {
+          activateStation(targetStation);
+          return;
+        }
+
+        const speed = 190 * delta;
+        player.x += dx / distance * speed;
+        player.y += dy / distance * speed;
+        player.facing = dx < 0 ? -1 : 1;
+        player.grounded = false;
+        checkStationContact();
+        return;
       }
 
-      if (dx || dy) {
-        const length = Math.hypot(dx, dy);
-        const speed = 155 * delta;
+      const oldY = player.y;
+      let dx = 0;
 
-        player.x += dx / length * speed;
-        player.y += dy / length * speed;
+      if (keys.has("left")) dx -= 1;
+      if (keys.has("right")) dx += 1;
 
-        if (dx) player.facing = dx < 0 ? -1 : 1;
+      const moveSpeed = 190 * delta;
+      player.x += dx * moveSpeed;
 
-        player.x = Math.max(22, Math.min(width - 22, player.x));
-        player.y = Math.max(height * .30, Math.min(height - 60, player.y));
+      if (dx) player.facing = dx < 0 ? -1 : 1;
+      player.x = Math.max(18, Math.min(width - 18, player.x));
+
+      // Gravity and jumping.
+      player.vy += Math.max(950, height * 1.65) * delta;
+      player.y += player.vy * delta;
+      player.grounded = false;
+
+      // Main ground collision.
+      const floor = groundY();
+      if (player.y >= floor) {
+        player.y = floor;
+        player.vy = 0;
+        player.grounded = true;
       }
+
+      // Land on top of platforms while descending.
+      if (player.vy >= 0) {
+        const footWidth = Math.max(12, avatarHeight() * .16);
+
+        for (const platform of platforms) {
+          const r = platformRect(platform);
+          const overlapsX =
+            player.x + footWidth > r.x &&
+            player.x - footWidth < r.x + r.w;
+          const crossedTop = oldY <= r.y && player.y >= r.y;
+
+          if (overlapsX && crossedTop) {
+            player.y = r.y;
+            player.vy = 0;
+            player.grounded = true;
+          }
+        }
+      }
+
+      // Keep the player within the playable scene.
+      player.y = Math.max(height * .25, player.y);
+
+      // Walking or jumping into an emblem activates its destination.
+      checkStationContact();
+    }
+
+    function drawForeground() {
+      // Foreground foliage gives the scene extra depth.
+      ctx.fillStyle = "rgba(12, 31, 19, .72)";
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      ctx.lineTo(0, height * .78);
+      ctx.quadraticCurveTo(width * .08, height * .83, width * .17, height);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(width, height);
+      ctx.lineTo(width, height * .77);
+      ctx.quadraticCurveTo(width * .91, height * .84, width * .82, height);
+      ctx.closePath();
+      ctx.fill();
+
+      const vignette = ctx.createRadialGradient(
+        width * .5, height * .48, height * .18,
+        width * .5, height * .48, Math.max(width, height) * .75
+      );
+      vignette.addColorStop(0, "rgba(0,0,0,0)");
+      vignette.addColorStop(1, "rgba(5,15,9,.35)");
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, width, height);
     }
 
     function frame(timeMs) {
@@ -592,11 +843,14 @@
       previousTime = timeMs;
 
       update(delta);
+
       drawBackground();
       drawTrees();
       drawBirds(time);
+      drawPlatforms();
       stations.forEach(drawStation);
       drawCharacter(time);
+      drawForeground();
 
       requestAnimationFrame(frame);
     }

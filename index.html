@@ -187,12 +187,25 @@
       tiktok: "https://www.tiktok.com/@baggettball"
     };
 
-    // Keep avatar.png and aye.mp3 in the same folder as this index.html file.
     const avatar = new Image();
     avatar.src = "./avatar.png";
 
     const decisionSound = new Audio("./aye.mp3");
     decisionSound.preload = "auto";
+
+    const backgroundMusic = new Audio("./stupidsong.m4a");
+    backgroundMusic.loop = true;
+    backgroundMusic.volume = 0.35;
+    backgroundMusic.preload = "auto";
+
+    function startBackgroundMusic() {
+      backgroundMusic.play().catch(() => {
+        // Browsers often block autoplay until a user interaction happens.
+      });
+    }
+    startBackgroundMusic();
+    window.addEventListener("pointerdown", startBackgroundMusic, { once: true });
+    window.addEventListener("keydown", startBackgroundMusic, { once: true });
 
     const stations = [
       { id: "youtube", label: "YouTube", icon: "▶", color: "#e76b58", x: .20, y: .49 },
@@ -359,7 +372,6 @@
       ctx.fillStyle = sunlight;
       ctx.fillRect(0, 0, width, height);
 
-      // Distant hills.
       ctx.fillStyle = "#526d54";
       ctx.beginPath();
       ctx.moveTo(0, height * .45);
@@ -369,7 +381,6 @@
       ctx.lineTo(0, height * .58);
       ctx.fill();
 
-      // Pond and water.
       ctx.fillStyle = "#375943";
       ctx.beginPath();
       ctx.ellipse(width * .12, height * .60, width * .22, height * .10, -.06, 0, Math.PI * 2);
@@ -383,14 +394,12 @@
       ctx.ellipse(width * .12, height * .59, width * .195, height * .075, -.06, 0, Math.PI * 2);
       ctx.fill();
 
-      // Forest floor.
       const ground = ctx.createLinearGradient(0, height * .43, 0, height);
       ground.addColorStop(0, "#425c3b");
       ground.addColorStop(1, "#172d22");
       ctx.fillStyle = ground;
       ctx.fillRect(0, height * .43, width, height * .57);
 
-      // Perspective path.
       ctx.fillStyle = "#9c9275";
       ctx.beginPath();
       ctx.moveTo(width * .46, height * .43);
@@ -400,17 +409,13 @@
       ctx.closePath();
       ctx.fill();
 
-      // Path stones.
       for (let i = 1; i < 17; i++) {
         const t = i / 18;
         const y = height * (.45 + t * .5);
         const x = width * (.5 + Math.sin(i * 4.7) * t * .19);
         const size = Math.max(3, width * (.005 + t * .01));
 
-        ctx.fillStyle = i % 2
-          ? "rgba(61, 66, 51, .42)"
-          : "rgba(221, 207, 165, .34)";
-
+        ctx.fillStyle = i % 2 ? "rgba(61, 66, 51, .42)" : "rgba(221, 207, 165, .34)";
         ctx.beginPath();
         ctx.ellipse(x, y, size, size * .35, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -484,7 +489,6 @@
       const scale = Math.max(.7, Math.min(1, height / 720));
       const radius = 23 * scale;
 
-      // Signpost.
       ctx.strokeStyle = "#544a35";
       ctx.lineWidth = 5 * scale;
       ctx.beginPath();
@@ -492,7 +496,6 @@
       ctx.lineTo(x, y + 42 * scale);
       ctx.stroke();
 
-      // Sign.
       ctx.fillStyle = "#253c2b";
       ctx.strokeStyle = station.color;
       ctx.lineWidth = 2;

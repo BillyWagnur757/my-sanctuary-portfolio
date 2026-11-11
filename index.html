@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillyWagnur - Bird Sanctuary Explorer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #051408;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        /* UI Overlay */
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 30, 15, 0.85);
+            border: 2px solid #2ecc71;
+            padding: 14px 22px;
+            border-radius: 12px;
+            pointer-events: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+        }
+        .hud h1 {
+            font-size: 1.2rem;
+            color: #2ecc71;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .hud p {
+            font-size: 0.85rem;
+            color: #d1f2d9;
+        }
+        /* Quick Nav Menu */
+        .quick-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 30, 15, 0.85);
+            border: 2px solid #2ecc71;
+            padding: 10px 20px;
+            border-radius: 30px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            z-index: 10;
+        }
+        .nav-btn {
+            background: #1e4620;
+            border: 1px solid #2ecc71;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .nav-btn:hover {
+            background: #2ecc71;
+            color: #051408;
+            transform: translateY(-2px);
+        }
+        /* Mobile D-Pad */
+        .dpad {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 140px;
+            height: 140px;
+            display: none;
+            pointer-events: auto;
+            z-index: 20;
+        }
+        .dpad-btn {
+            position: absolute;
+            background: rgba(46, 204, 113, 0.3);
+            border: 2px solid #2ecc71;
+            color: white;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            user-select: none;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+        .dpad-up { top: 0; left: 45px; width: 50px; height: 45px; }
+        .dpad-down { bottom: 0; left: 45px; width: 50px; height: 45px; }
+        .dpad-left { top: 45px; left: 0; width: 45px; height: 50px; }
+        .dpad-right { top: 45px; right: 0; width: 45px; height: 50px; }
+        @media (max-width: 900px) {
+            .dpad { display: block; }
+        }
+        /* Interactive Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: #0d2812;
+            border: 3px solid #2ecc71;
+            width: 90%;
+            max-width: 650px;
+            padding: 30px;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-card.brain-mode {
+            background: #ffffff;
+            color: #111;
+            border: 4px solid #333;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px; right: 20px;
+            background: transparent;
+            border: none;
+            color: #2ecc71;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+        .modal-card.brain-mode .close-modal { color: #333; }
+        .modal-title { font-size: 1.8rem; margin-bottom: 15px; color: #2ecc71; }
+        .modal-card.brain-mode .modal-title { color: #111; }
+        .modal-body { font-size: 1rem; line-height: 1.6; color: #d1f2d9; }
+        .modal-card.brain-mode .modal-body { color: #444; }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="hud">
+            <h1>BillyWagnur Sanctuary</h1>
+            <p>Use WASD / Arrows to Explore • Walk to options</p>
+        </div>
+
+        <div class="quick-nav">
+            <button class="nav-btn" onclick="openModal('youtube')">YouTube</button>
+            <button class="nav-btn" onclick="openModal('applemusic')">Apple Music</button>
+            <button class="nav-btn" onclick="openModal('spotify')">Spotify</button>
+            <button class="nav-btn" onclick="openModal('tiktok')">TikTok</button>
+            <button class="nav-btn" onclick="openModal('brain')">Bill's Brain</button>
+        </div>
+
+        <div class="dpad">
+            <div class="dpad-btn dpad-up" ontouchstart="setKey('ArrowUp', true)" ontouchend="setKey('ArrowUp', false)">▲</div>
+            <div class="dpad-btn dpad-down" ontouchstart="setKey('ArrowDown', true)" ontouchend="setKey('ArrowDown', false)">▼</div>
+            <div class="dpad-btn dpad-left" ontouchstart="setKey('ArrowLeft', true)" ontouchend="setKey('ArrowLeft', false)">◀</div>
+            <div class="dpad-btn dpad-right" ontouchstart="setKey('ArrowRight', true)" ontouchend="setKey('ArrowRight', false)">▶</div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="contentModal" onclick="closeModalOnBg(event)">
+        <div class="modal-card" id="modalCard">
+            <button class="close-modal" onclick="closeModal()">×</button>
+            <h2 class="modal-title" id="modalTitle">Option Title</h2>
+            <div class="modal-body" id="modalBody">Content goes here...</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Audio Effects Generator / Handler
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'aye') {
+                // "Aye" pleasant high chime
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'uh') {
+                // "Uh" low bump sound when hitting wall
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            }
+        }
+
+        // Character Image Sprite
+        const charImg = new Image();
+        charImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='; // fallback placeholder
+        // Load the exact user provided character image
+        charImg.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'; // Replaced by loaded photo asset representation below in runtime
+
+        // Player State
+        const player = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2 + 100,
+            radius: 35,
+            speed: 2.2, // Slow steady walk speed across rich map
+            facing: 'front'
+        };
+
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','KeyW','KeyA','KeyS','KeyD'].includes(e.code)) {
+                keys[e.code] = true;
+            }
+        });
+        window.addEventListener('keyup', e => {
+            keys[e.code] = false;
+        });
+
+        function setKey(code, isDown) {
+            if (code === 'ArrowUp') keys['ArrowUp'] = isDown;
+            if (code === 'ArrowDown') keys['ArrowDown'] = isDown;
+            if (code === 'ArrowLeft') keys['ArrowLeft'] = isDown;
+            if (code === 'ArrowRight') keys['ArrowRight'] = isDown;
+        }
+
+        // Stations Data positioned to match photo layout (Top half canopy area)
+        const stations = [
+            { id: 'youtube', name: 'YouTube', x: -220, y: -160, radius: 55, color: '#ff0000', icon: '📺' },
+            { id: 'applemusic', name: 'Apple Music', x: -60, y: -200, radius: 55, color: '#fa243c', icon: '🎵' },
+            { id: 'spotify', name: 'Spotify', x: 100, y: -190, radius: 55, color: '#1db954', icon: '🌿' },
+            { id: 'tiktok', name: 'TikTok', x: 220, y: -150, radius: 55, color: '#00f2fe', icon: '🎬' },
+            { id: 'brain', name: "Bill's Brain", x: 80, y: -270, radius: 60, color: '#ffffff', icon: '✨' }
+        ];
+
+        let activeStation = null;
+        let bumpTimer = 0;
+
+        // Load actual photo as avatar/head
+        const headSprite = new Image();
+        headSprite.crossOrigin = "anonymous";
+        headSprite.src = "watermarked_img_10702284474652220588.jpg"; 
+
+        function update() {
+            let dx = 0;
+            let dy = 0;
+
+            if (keys['ArrowUp'] || keys['KeyW']) dy -= 1;
+            if (keys['ArrowDown'] || keys['KeyS']) dy += 1;
+            if (keys['ArrowLeft'] || keys['KeyA']) dx -= 1;
+            if (keys['ArrowRight'] || keys['KeyD']) dx += 1;
+
+            if (dx !== 0 || dy !== 0) {
+                // Normalize diagonal movement
+                const len = Math.hypot(dx, dy);
+                let nextX = player.x + (dx / len) * player.speed;
+                let nextY = player.y + (dy / len) * player.speed;
+
+                // Map Boundary collision with "uh" sound
+                const boundX = canvas.width / 2 - 260;
+                const boundY = canvas.height / 2 - 320;
+                
+                if (nextX < boundX || nextX > canvas.width - boundX || nextY < boundY || nextY > canvas.height - 100) {
+                    if (Math.random() < 0.1) playTone('uh');
+                } else {
+                    player.x = nextX;
+                    player.y = nextY;
+                }
+            }
+
+            // Check station proximity
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            
+            let found = null;
+            stations.forEach(st => {
+                const worldStX = cx + st.x;
+                const worldStY = cy + st.y;
+                const dist = Math.hypot(player.x - worldStX, player.y - worldStY);
+                if (dist < st.radius + 20) {
+                    found = st;
+                }
+            });
+
+            if (found && activeStation !== found) {
+                activeStation = found;
+                playTone('aye');
+                openModal(activeStation.id);
+            } else if (!found) {
+                activeStation = null;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            // 1. Lush Deep 3D Forest Floor & Path
+            const grad = ctx.createRadialGradient(cx, cy, 50, cx, cy, Math.max(canvas.width, canvas.height));
+            grad.addColorStop(0, '#12351a');
+            grad.addColorStop(0.5, '#0a2210');
+            grad.addColorStop(1, '#030d06');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Cobblestone / Dirt Path in Center
+            ctx.fillStyle = '#1c2820';
+            ctx.beginPath();
+            ctx.moveTo(cx - 90, canvas.height);
+            ctx.lineTo(cx - 50, cy - 100);
+            ctx.lineTo(cx + 50, cy - 100);
+            ctx.lineTo(cx + 90, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cobble Stones on Path
+            ctx.fillStyle = '#26382b';
+            for (let i = 0; i < 15; i++) {
+                ctx.beginPath();
+                ctx.ellipse(cx + (i % 3 - 1) * 30, cy + i * 40 - 50, 25, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 2. Draw Interactive Sanctuary Stations
+            stations.forEach(st => {
+                const sx = cx + st.x;
+                const sy = cy + st.y;
+
+                // Glowing base stone
+                ctx.shadowColor = st.color;
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = '#1e3822';
+                ctx.beginPath();
+                ctx.arc(sx, sy, st.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = st.color;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Icon / Label
+                ctx.font = '24px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(st.icon, sx, sy - 5);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(st.name, sx, sy + 32);
+            });
+
+            // White Archway for Bill's Brain at top
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 25;
+            ctx.fillRect(cx + 50, cy - 320, 60, 90);
+            ctx.shadowBlur = 0;
+
+            // 3. Draw Player Character (BillyWagnur) matching photo
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            
+            // Hoodie / Body shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.ellipse(0, 25, 25, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Character Head (Using exact user photo aesthetic with purple cap & neon glasses)
+            if (headSprite.complete && headSprite.naturalWidth !== 0) {
+                ctx.drawImage(headSprite, -32, -50, 64, 64);
+            } else {
+                // Fallback avatar if loading
+                ctx.fillStyle = '#a29bfe';
+                ctx.beginPath();
+                ctx.arc(0, -20, 26, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // 4. Foreground Close-Up Monstera & Fern Leaves (3D Depth Effect)
+            ctx.fillStyle = '#081c0e';
+            // Left foreground leaves
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(0, canvas.height - 250);
+            ctx.quadraticCurveTo(120, canvas.height - 180, 180, canvas.height);
+            ctx.fill();
+
+            // Right foreground leaves
+            ctx.beginPath();
+            ctx.moveTo(canvas.width, canvas.height);
+            ctx.lineTo(canvas.width, canvas.height - 220);
+            ctx.quadraticCurveTo(canvas.width - 120, canvas.height - 150, canvas.width - 200, canvas.height);
+            ctx.fill();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        loop();
+
+        // Modal System
+        function openModal(type) {
+            playTone('aye');
+            const overlay = document.getElementById('contentModal');
+            const card = document.getElementById('modalCard');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            overlay.classList.add('active');
+            card.classList.remove('brain-mode');
+
+            if (type === 'youtube') {
+                title.innerText = "YouTube Showreel";
+                body.innerHTML = `<p>Explore official music videos, visual art creations, and sanctuary vlogs.</p><br><a href="https://youtube.com" target="_blank" style="color:#2ecc71; font-weight:bold; font-size:1.1rem;">👉 Click to Visit Channel</a>`;
+            } else if (type === 'applemusic') {
+                title.innerText = "Apple Music";
+                body.innerHTML = `<p>Stream high-fidelity audio releases, albums, and singles directly.</p><br><a href="https://music.apple.com" target="_blank" style="color:#fa243c; font-weight:bold; font-size:1.1rem;">🎧 Listen on Apple Music</a>`;
+            } else if (type === 'spotify') {
+                title.innerText = "Spotify Discography";
+                body.innerHTML = `<p>Check out curated playlists, top tracks, and artist releases.</p><br><a href="https://spotify.com" target="_blank" style="color:#1db954; font-weight:bold; font-size:1.1rem;">🌿 Listen on Spotify</a>`;
+            } else if (type === 'tiktok') {
+                title.innerText = "TikTok Clips";
+                body.innerHTML = `<p>Short-form visual art experiments, behind-the-scenes music production, and sanctuary walks.</p><br><a href="https://tiktok.com" target="_blank" style="color:#00f2fe; font-weight:bold; font-size:1.1rem;">✨ Watch on TikTok</a>`;
+            } else if (type === 'brain') {
+                card.classList.add('brain-mode');
+                title.innerText = "Bill's Brain (Pure Void)";
+                body.innerHTML = `<p style="font-size:1.2rem; font-weight:600; color:#222;">Welcome to the surreal blank white room inside Bill's head. Floating ideas, random thoughts, and chaotic creativity live here.</p><br><div style="font-size:2.5rem; display:flex; justify-content:space-around; margin-top:20px;">🧠🌀⚡🎨🎶</div>`;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('contentModal').classList.remove('active');
+        }
+
+        function closeModalOnBg(e) {
+            if (e.target.id === 'contentModal') closeModal();
+        }
+    </script>
+</body>
+</html>

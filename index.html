@@ -35,8 +35,8 @@
       position: absolute;
       border: 1px solid rgba(220, 239, 209, .4);
       border-radius: 14px;
-      background: rgba(15, 36, 27, .84);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, .3);
+      background: rgba(15, 36, 27, .86);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
       backdrop-filter: blur(8px);
       pointer-events: none;
     }
@@ -86,9 +86,9 @@
       width: 44px;
       height: 44px;
       padding: 0;
-      border: 1px solid rgba(230, 242, 217, .7);
+      border: 1px solid rgba(230, 242, 217, .75);
       border-radius: 12px;
-      background: rgba(37, 72, 52, .9);
+      background: rgba(37, 72, 52, .94);
       color: white;
       font: inherit;
       font-size: 1.1rem;
@@ -106,7 +106,7 @@
       top: 50px;
       left: 50px;
       border-radius: 50%;
-      background: rgba(117, 91, 56, .94);
+      background: rgba(117, 91, 56, .96);
     }
 
     @media (max-width: 650px) {
@@ -121,10 +121,6 @@
         padding: 8px 10px;
         font-size: .72rem;
       }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; }
     }
   </style>
 </head>
@@ -162,25 +158,30 @@
       tiktok: "https://www.tiktok.com/@baggettball"
     };
 
-    // Keep avatar.png, aye.mp3, uh.mp3, and stupidsong.m4a
-    // in the same folder as this index.html file.
+    // Keep all four media files beside index.html in your repository.
     const avatar = new Image();
     avatar.src = "./avatar.png";
 
-    const decisionSound = new Audio("./aye.mp3");
-    decisionSound.preload = "auto";
-
     const jumpSound = new Audio("./uh.mp3");
     jumpSound.preload = "auto";
+    jumpSound.volume = 1;
+
+    const decisionSound = new Audio("./aye.mp3");
+    decisionSound.preload = "auto";
+    decisionSound.volume = 1;
 
     const backgroundMusic = new Audio("./stupidsong.m4a");
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.35;
     backgroundMusic.preload = "auto";
 
+    jumpSound.addEventListener("error", () => {
+      console.error("Could not load uh.mp3. Check its exact name and repository location.");
+    });
+
     function startMusic() {
       backgroundMusic.play().catch(() => {
-        // Most browsers wait for the visitor's first interaction before playing audio.
+        // Browsers may wait for the visitor's first interaction before playing music.
       });
     }
 
@@ -188,39 +189,40 @@
     window.addEventListener("pointerdown", startMusic, { once: true });
     window.addEventListener("keydown", startMusic, { once: true });
 
-    // The emblems are deliberately farther up the sanctuary path.
+    // Emblems are placed deeper into the sanctuary.
     const stations = [
-      { id: "youtube", label: "YouTube", icon: "▶", color: "#f07862", x: .15, y: .57 },
-      { id: "spotify", label: "Spotify", icon: "♫", color: "#a9cf83", x: .38, y: .52 },
-      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#efa0a6", x: .62, y: .52 },
-      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bd5ce", x: .85, y: .57 }
+      { id: "youtube", label: "YouTube", icon: "▶", color: "#f07862", x: .15, y: .55 },
+      { id: "spotify", label: "Spotify", icon: "♫", color: "#a9cf83", x: .38, y: .51 },
+      { id: "applemusic", label: "Apple Music", icon: "♫", color: "#efa0a6", x: .62, y: .51 },
+      { id: "tiktok", label: "TikTok", icon: "♪", color: "#8bd5ce", x: .85, y: .55 }
     ];
 
-    // Collision obstacles. Jump over them or steer around them.
+    // Larger, clearly visible objects. Jump over these or steer around them.
     const obstacles = [
-      { type: "rock",  x: .18, y: .78, w: .075, h: .055, blockW: .055, blockH: .045, height: 27 },
-      { type: "log",   x: .36, y: .72, w: .16,  h: .060, blockW: .14,  blockH: .05,  height: 30 },
-      { type: "stump", x: .55, y: .78, w: .070, h: .12,  blockW: .060, blockH: .07,  height: 45 },
-      { type: "rock",  x: .73, y: .68, w: .080, h: .060, blockW: .065, blockH: .05,  height: 29 },
-      { type: "log",   x: .85, y: .76, w: .14,  h: .055, blockW: .13,  blockH: .045, height: 28 },
-      { type: "rock",  x: .28, y: .63, w: .065, h: .050, blockW: .05,  blockH: .04,  height: 23 },
-      { type: "stump", x: .47, y: .63, w: .060, h: .10,  blockW: .052, blockH: .06,  height: 39 },
-      { type: "rock",  x: .69, y: .59, w: .060, h: .045, blockW: .05,  blockH: .036, height: 22 }
+      { type: "rock",  x: .16, y: .78, w: .105, h: .09,  blockW: .075, blockH: .055, height: 34 },
+      { type: "log",   x: .34, y: .72, w: .19,  h: .075, blockW: .16,  blockH: .055, height: 34 },
+      { type: "stump", x: .55, y: .77, w: .09,  h: .15,  blockW: .065, blockH: .085, height: 52 },
+      { type: "rock",  x: .76, y: .69, w: .11,  h: .09,  blockW: .078, blockH: .06,  height: 36 },
+      { type: "log",   x: .88, y: .77, w: .18,  h: .07,  blockW: .15,  blockH: .05,  height: 32 },
+      { type: "rock",  x: .27, y: .63, w: .085, h: .07,  blockW: .06,  blockH: .045, height: 29 },
+      { type: "stump", x: .48, y: .63, w: .075, h: .12,  blockW: .06,  blockH: .07,  height: 46 },
+      { type: "rock",  x: .69, y: .59, w: .08,  h: .065, blockW: .06,  blockH: .04,  height: 27 },
+      { type: "log",   x: .39, y: .57, w: .13,  h: .06,  blockW: .11,  blockH: .045, height: 28 },
+      { type: "rock",  x: .83, y: .62, w: .08,  h: .07,  blockW: .06,  blockH: .045, height: 30 }
     ];
 
-    // Trees add depth; trunks can also block the character's path.
     const trees = [
-      { x: .02, y: .68, scale: 1.20 },
-      { x: .10, y: .57, scale: .82 },
-      { x: .30, y: .54, scale: .62 },
-      { x: .71, y: .53, scale: .62 },
-      { x: .91, y: .57, scale: .84 },
-      { x: .99, y: .68, scale: 1.22 }
+      { x: .02, y: .69, scale: 1.25 },
+      { x: .10, y: .57, scale: .88 },
+      { x: .30, y: .54, scale: .66 },
+      { x: .70, y: .53, scale: .65 },
+      { x: .91, y: .57, scale: .90 },
+      { x: .99, y: .69, scale: 1.28 }
     ];
 
     const birds = Array.from({ length: 10 }, (_, i) => ({
       x: Math.random(),
-      y: .12 + Math.random() * .25,
+      y: .12 + Math.random() * .24,
       speed: .014 + Math.random() * .025,
       phase: Math.random() * Math.PI * 2,
       size: 3 + Math.random() * 3,
@@ -243,24 +245,22 @@
     let pixelRatio = 1;
     let previousTime = 0;
     let activated = false;
-    let activationTimer = null;
 
     function groundY() {
       return height * .88;
     }
 
-    // The avatar appears smaller farther up the path.
+    // Character size changes with its depth on the path.
     function getPlayerScale() {
-      const near = height * .88;
-      const far = height * .48;
-      const depth = Math.max(0, Math.min(1, (player.y - far) / (near - far)));
+      const farY = height * .47;
+      const nearY = height * .88;
+      const depth = Math.max(0, Math.min(1, (player.y - farY) / (nearY - farY)));
       return .34 + depth * .66;
     }
 
     function getAvatarDimensions() {
-      const scale = getPlayerScale();
-      const baseHeight = Math.min(height * .22, 175);
-      const spriteHeight = baseHeight * scale;
+      const baseHeight = Math.min(height * .23, 182);
+      const spriteHeight = baseHeight * getPlayerScale();
       const aspect = avatar.naturalWidth && avatar.naturalHeight
         ? avatar.naturalWidth / avatar.naturalHeight
         : .72;
@@ -287,7 +287,7 @@
         player.grounded = true;
       } else {
         player.x = Math.min(width - 18, player.x);
-        player.y = Math.min(groundY(), Math.max(height * .48, player.y));
+        player.y = Math.min(groundY(), Math.max(height * .47, player.y));
       }
     }
 
@@ -297,15 +297,17 @@
     function playSound(sound) {
       sound.currentTime = 0;
       sound.play().catch(error => {
-        console.warn(`Could not play ${sound.src}:`, error);
+        console.warn(`Could not play ${sound.src}. Check that the audio file exists beside index.html.`, error);
       });
     }
 
     function jump() {
       if (activated || !player.grounded) return;
 
-      player.jumpVelocity = Math.max(430, height * .78);
+      player.jumpVelocity = Math.max(450, height * .82);
       player.grounded = false;
+
+      // This call is made directly from the user's jump key/button press.
       playSound(jumpSound);
     }
 
@@ -322,15 +324,14 @@
       const playerRadius = Math.max(7, getAvatarDimensions().width * .11);
 
       for (const obstacle of obstacles) {
-        // While high enough in the jump, the avatar can clear the obstacle.
+        // A sufficiently high jump clears the obstacle.
         if (player.jumpZ > obstacle.height) continue;
 
-        const rect = obstacleRect(obstacle);
-        const left = rect.x - rect.w / 2;
-        const right = rect.x + rect.w / 2;
-        const top = rect.y - rect.h / 2;
-        const bottom = rect.y + rect.h / 2;
-
+        const r = obstacleRect(obstacle);
+        const left = r.x - r.w / 2;
+        const right = r.x + r.w / 2;
+        const top = r.y - r.h / 2;
+        const bottom = r.y + r.h / 2;
         const closestX = Math.max(left, Math.min(x, right));
         const closestY = Math.max(top, Math.min(y, bottom));
         const dx = x - closestX;
@@ -341,16 +342,15 @@
         }
       }
 
-      // Tree trunks in the playable area also block movement.
+      // Tree trunks in the playing area also block movement.
       for (const tree of trees) {
         if (tree.x < .13 || tree.x > .87) continue;
 
         const tx = width * tree.x;
         const ty = height * tree.y;
-        const trunkRadius = 7 * tree.scale;
-        const playerRadius = Math.max(7, getAvatarDimensions().width * .10);
+        const treeRadius = 8 * tree.scale;
 
-        if (Math.hypot(x - tx, y - ty) < trunkRadius + playerRadius) {
+        if (Math.hypot(x - tx, y - ty) < treeRadius + playerRadius) {
           return true;
         }
       }
@@ -359,12 +359,13 @@
     }
 
     function movePlayer(dx, dy) {
+      // Check each axis separately so the avatar can slide around obstacles.
       const nextX = Math.max(14, Math.min(width - 14, player.x + dx));
       if (!collidesWithObstacle(nextX, player.y)) {
         player.x = nextX;
       }
 
-      const nextY = Math.max(height * .48, Math.min(groundY(), player.y + dy));
+      const nextY = Math.max(height * .47, Math.min(groundY(), player.y + dy));
       if (!collidesWithObstacle(player.x, nextY)) {
         player.y = nextY;
       }
@@ -378,30 +379,28 @@
       statusEl.textContent = `Opening ${station.label}…`;
       playSound(decisionSound);
 
-      activationTimer = setTimeout(() => {
+      setTimeout(() => {
         window.location.href = destinations[station.id];
-      }, 400);
+      }, 450);
     }
 
     function checkEmblemTouch() {
       if (activated) return;
 
       const dimensions = getAvatarDimensions();
-      const avatarCenterX = player.x;
       const avatarCenterY = player.y - player.jumpZ - dimensions.height * .52;
 
       for (const station of stations) {
         const stationX = width * station.x;
         const stationGroundY = height * station.y;
-        const emblemRadius = Math.max(17, Math.min(24, height * .032));
-        const emblemY = stationGroundY - emblemRadius - 10;
+        const radius = Math.max(18, Math.min(25, height * .034));
+        const emblemY = stationGroundY - radius - 10;
 
-        // A little tolerance makes touching the visible avatar/emblem feel natural.
-        const touchX = emblemRadius + dimensions.width * .28;
-        const touchY = emblemRadius + dimensions.height * .34;
+        const touchX = radius + dimensions.width * .28;
+        const touchY = radius + dimensions.height * .34;
 
         if (
-          Math.abs(avatarCenterX - stationX) < touchX &&
+          Math.abs(player.x - stationX) < touchX &&
           Math.abs(avatarCenterY - emblemY) < touchY
         ) {
           activateStation(station);
@@ -419,6 +418,7 @@
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, width, height);
 
+      // Sunlit atmosphere behind the hills.
       const sunlight = ctx.createRadialGradient(
         width * .53, height * .19, 2,
         width * .53, height * .19, height * .62
@@ -440,7 +440,7 @@
       ctx.closePath();
       ctx.fill();
 
-      // Nearer hill layer.
+      // Nearer rolling hills.
       ctx.fillStyle = "#5b7655";
       ctx.beginPath();
       ctx.moveTo(0, height * .49);
@@ -466,6 +466,7 @@
       ctx.ellipse(width * .12, height * .61, width * .205, height * .077, -.06, 0, Math.PI * 2);
       ctx.fill();
 
+      // Reflections on water.
       ctx.strokeStyle = "rgba(233, 241, 212, .4)";
       ctx.lineWidth = 1;
       for (let i = 0; i < 8; i++) {
@@ -485,7 +486,7 @@
       ctx.fillStyle = ground;
       ctx.fillRect(0, height * .46, width, height * .54);
 
-      // Perspective trail.
+      // Perspective path, narrow in the distance and broad in front.
       ctx.fillStyle = "#a49a7a";
       ctx.beginPath();
       ctx.moveTo(width * .475, height * .45);
@@ -501,7 +502,7 @@
       ctx.fillStyle = pathLight;
       ctx.fill();
 
-      // Perspective stones.
+      // Stones get larger toward the front of the perspective path.
       for (let i = 1; i < 22; i++) {
         const t = i / 23;
         const y = height * (.47 + t * .50);
@@ -540,6 +541,7 @@
       ctx.fill();
 
       const leaves = ["#263f2e", "#34553a", "#456643", "#526d46"];
+
       for (let i = 0; i < 6; i++) {
         ctx.fillStyle = leaves[i % leaves.length];
         ctx.beginPath();
@@ -556,7 +558,7 @@
       }
 
       // Sunlit leaves.
-      ctx.fillStyle = "rgba(173, 184, 112, .22)";
+      ctx.fillStyle = "rgba(173, 184, 112, .24)";
       ctx.beginPath();
       ctx.ellipse(x - 25 * scale, top - 54 * scale, 20 * scale, 9 * scale, -.55, 0, Math.PI * 2);
       ctx.ellipse(x + 10 * scale, top - 35 * scale, 16 * scale, 7 * scale, .45, 0, Math.PI * 2);
@@ -587,7 +589,7 @@
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(171, 190, 119, .34)";
+      ctx.strokeStyle = "rgba(171, 190, 119, .42)";
       ctx.lineWidth = Math.max(2, h * .07);
       ctx.beginPath();
       ctx.moveTo(x - w * .28, y + h * .55);
@@ -601,87 +603,117 @@
       const w = width * obstacle.w;
       const h = height * obstacle.h;
 
-      // Shadow.
-      ctx.fillStyle = "rgba(12, 21, 13, .32)";
+      // Visible cast shadow under each object.
+      ctx.fillStyle = "rgba(8, 17, 10, .45)";
       ctx.beginPath();
-      ctx.ellipse(x, y + h * .45, w * .62, h * .28, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + w * .08, y + h * .40, w * .62, h * .27, 0, 0, Math.PI * 2);
       ctx.fill();
 
       if (obstacle.type === "rock") {
         const rock = ctx.createLinearGradient(x - w / 2, y, x + w / 2, y + h);
-        rock.addColorStop(0, "#9a9d85");
-        rock.addColorStop(.4, "#697362");
-        rock.addColorStop(1, "#424f40");
+        rock.addColorStop(0, "#b1b59d");
+        rock.addColorStop(.35, "#858d77");
+        rock.addColorStop(1, "#414f40");
+
         ctx.fillStyle = rock;
         ctx.beginPath();
-        ctx.moveTo(x - w * .5, y + h * .38);
-        ctx.lineTo(x - w * .34, y + h * .05);
-        ctx.lineTo(x + w * .04, y);
-        ctx.lineTo(x + w * .36, y + h * .12);
-        ctx.lineTo(x + w * .5, y + h * .52);
-        ctx.lineTo(x + w * .34, y + h);
-        ctx.lineTo(x - w * .42, y + h);
+        ctx.moveTo(x - w * .50, y + h * .68);
+        ctx.lineTo(x - w * .41, y + h * .30);
+        ctx.lineTo(x - w * .12, y + h * .04);
+        ctx.lineTo(x + w * .19, y);
+        ctx.lineTo(x + w * .44, y + h * .20);
+        ctx.lineTo(x + w * .50, y + h * .66);
+        ctx.lineTo(x + w * .31, y + h);
+        ctx.lineTo(x - w * .37, y + h);
         ctx.closePath();
         ctx.fill();
-      } else if (obstacle.type === "stump") {
-        ctx.fillStyle = "#674a31";
-        ctx.fillRect(x - w * .38, y + h * .18, w * .76, h * .82);
 
-        const top = ctx.createLinearGradient(x, y, x, y + h * .35);
-        top.addColorStop(0, "#b58b58");
-        top.addColorStop(1, "#795938");
-        ctx.fillStyle = top;
+        ctx.fillStyle = "rgba(238, 239, 207, .38)";
         ctx.beginPath();
-        ctx.ellipse(x, y + h * .2, w * .5, h * .19, 0, 0, Math.PI * 2);
+        ctx.moveTo(x - w * .34, y + h * .34);
+        ctx.lineTo(x - w * .10, y + h * .08);
+        ctx.lineTo(x + w * .15, y + h * .09);
+        ctx.lineTo(x - w * .02, y + h * .42);
+        ctx.closePath();
         ctx.fill();
 
-        ctx.strokeStyle = "rgba(72, 48, 30, .65)";
+        ctx.strokeStyle = "rgba(45, 54, 42, .55)";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.ellipse(x, y + h * .2, w * .26, h * .09, 0, 0, Math.PI * 2);
+        ctx.moveTo(x + w * .10, y + h * .45);
+        ctx.lineTo(x + w * .27, y + h * .72);
         ctx.stroke();
+      } else if (obstacle.type === "stump") {
+        ctx.fillStyle = "#63452e";
+        ctx.fillRect(x - w * .34, y + h * .18, w * .68, h * .82);
+
+        const stumpTop = ctx.createLinearGradient(x, y, x, y + h * .35);
+        stumpTop.addColorStop(0, "#c29a64");
+        stumpTop.addColorStop(1, "#815d39");
+        ctx.fillStyle = stumpTop;
+        ctx.beginPath();
+        ctx.ellipse(x, y + h * .2, w * .48, h * .19, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#674a30";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(x, y + h * .2, w * .27, h * .09, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(43, 62, 33, .85)";
+        ctx.beginPath();
+        ctx.ellipse(x + w * .28, y + h * .47, w * .14, h * .08, .3, 0, Math.PI * 2);
+        ctx.fill();
       } else if (obstacle.type === "log") {
-        ctx.fillStyle = "#684a31";
+        ctx.fillStyle = "#67492f";
         ctx.beginPath();
         ctx.roundRect(x - w / 2, y + h * .18, w, h * .68, h * .32);
         ctx.fill();
 
-        ctx.fillStyle = "#ad8352";
+        ctx.strokeStyle = "rgba(187, 142, 83, .8)";
+        ctx.lineWidth = Math.max(2, h * .07);
         ctx.beginPath();
-        ctx.ellipse(x - w * .45, y + h * .52, h * .24, h * .34, 0, 0, Math.PI * 2);
+        ctx.moveTo(x - w * .32, y + h * .35);
+        ctx.lineTo(x + w * .35, y + h * .35);
+        ctx.moveTo(x - w * .22, y + h * .62);
+        ctx.lineTo(x + w * .37, y + h * .62);
+        ctx.stroke();
+
+        ctx.fillStyle = "#b68b57";
+        ctx.beginPath();
+        ctx.ellipse(x - w * .44, y + h * .52, h * .23, h * .34, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.strokeStyle = "#60452d";
+        ctx.strokeStyle = "#61452e";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.ellipse(x - w * .45, y + h * .52, h * .14, h * .21, 0, 0, Math.PI * 2);
+        ctx.ellipse(x - w * .44, y + h * .52, h * .14, h * .21, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
 
     function drawStation(station) {
       const x = width * station.x;
-      const groundY = height * station.y;
+      const ground = height * station.y;
       const scale = Math.max(.68, Math.min(1, height / 720));
       const radius = 23 * scale;
-      const bubbleY = groundY - radius - 10 * scale;
+      const bubbleY = ground - radius - 10 * scale;
 
-      // Signpost shadow and post.
-      ctx.fillStyle = "rgba(12, 22, 14, .3)";
+      ctx.fillStyle = "rgba(12, 22, 14, .35)";
       ctx.beginPath();
-      ctx.ellipse(x, groundY + 2, 20 * scale, 6 * scale, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, ground + 2, 20 * scale, 6 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = "#604a32";
       ctx.lineWidth = 5 * scale;
       ctx.beginPath();
       ctx.moveTo(x, bubbleY + radius * .7);
-      ctx.lineTo(x, groundY);
+      ctx.lineTo(x, ground);
       ctx.stroke();
 
-      // Glowing link emblem.
       ctx.shadowColor = station.color;
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 18;
       ctx.fillStyle = "#233b2b";
       ctx.strokeStyle = station.color;
       ctx.lineWidth = 2.5;
@@ -700,7 +732,7 @@
       ctx.font = `600 ${Math.max(10, 11 * scale)}px system-ui`;
       const labelW = Math.max(64 * scale, ctx.measureText(station.label).width + 18);
 
-      ctx.fillStyle = "rgba(20, 37, 26, .9)";
+      ctx.fillStyle = "rgba(20, 37, 26, .92)";
       ctx.beginPath();
       ctx.roundRect(x - labelW / 2, bubbleY + radius + 5, labelW, 20 * scale, 7);
       ctx.fill();
@@ -715,14 +747,12 @@
       const bob = player.grounded && moving ? Math.abs(Math.sin(time * 11)) * 2 : 0;
       const drawY = player.y - player.jumpZ + bob;
 
-      // Ground shadow remains on the path as the avatar jumps.
-      const shadowOpacity = Math.max(.10, .34 - player.jumpZ / 700);
-      ctx.fillStyle = `rgba(10, 20, 13, ${shadowOpacity})`;
+      ctx.fillStyle = `rgba(10, 20, 13, ${Math.max(.1, .34 - player.jumpZ / 700)})`;
       ctx.beginPath();
       ctx.ellipse(
         player.x,
         player.y + 2,
-        Math.max(10, dimensions.width * .24) * (1 + player.jumpZ / 250),
+        Math.max(9, dimensions.width * .24) * (1 + player.jumpZ / 250),
         Math.max(3, dimensions.height * .045),
         0,
         0,
@@ -760,18 +790,19 @@
     }
 
     function drawForeground() {
-      ctx.fillStyle = "rgba(10, 27, 16, .78)";
+      // Dark foliage frames the path to increase the sense of depth.
+      ctx.fillStyle = "rgba(10, 27, 16, .82)";
 
       ctx.beginPath();
       ctx.moveTo(0, height);
-      ctx.lineTo(0, height * .79);
+      ctx.lineTo(0, height * .77);
       ctx.quadraticCurveTo(width * .08, height * .81, width * .17, height);
       ctx.closePath();
       ctx.fill();
 
       ctx.beginPath();
       ctx.moveTo(width, height);
-      ctx.lineTo(width, height * .77);
+      ctx.lineTo(width, height * .76);
       ctx.quadraticCurveTo(width * .91, height * .82, width * .82, height);
       ctx.closePath();
       ctx.fill();
@@ -784,6 +815,28 @@
       shade.addColorStop(1, "rgba(5,15,9,.38)");
       ctx.fillStyle = shade;
       ctx.fillRect(0, 0, width, height);
+    }
+
+    function checkEmblemTouch() {
+      if (activated) return;
+
+      const dimensions = getAvatarDimensions();
+      const avatarCenterY = player.y - player.jumpZ - dimensions.height * .52;
+
+      for (const station of stations) {
+        const stationX = width * station.x;
+        const stationGround = height * station.y;
+        const radius = Math.max(18, Math.min(25, height * .034));
+        const emblemY = stationGround - radius - 10;
+
+        if (
+          Math.abs(player.x - stationX) < radius + dimensions.width * .28 &&
+          Math.abs(avatarCenterY - emblemY) < radius + dimensions.height * .34
+        ) {
+          activateStation(station);
+          return;
+        }
+      }
     }
 
     function update(delta) {
@@ -801,7 +854,6 @@
         const length = Math.hypot(dx, dy);
         const speed = 190 * delta;
         movePlayer(dx / length * speed, dy / length * speed);
-
         if (dx) player.facing = dx < 0 ? -1 : 1;
       }
 
@@ -823,8 +875,8 @@
       drawBackground();
       drawBirds(time);
 
-      // Distant hills behind the closer forest.
-      drawHill(width * .19, height * .48, width * .30, height * .13, "#496444");
+      // Extra raised hill shapes, drawn behind the foreground objects.
+      drawHill(width * .18, height * .48, width * .30, height * .13, "#496444");
       drawHill(width * .83, height * .47, width * .34, height * .16, "#3e5b3b");
 
       const depthObjects = [];
